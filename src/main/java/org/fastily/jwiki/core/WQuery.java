@@ -19,7 +19,7 @@ import com.google.gson.reflect.TypeToken;
  * @author Fastily
  *
  */
-class WQuery
+public class WQuery
 {
 	/**
 	 * Default parameters for getting category size info
@@ -378,7 +378,7 @@ class WQuery
 	 * @author Fastily
 	 *
 	 */
-	protected static class QTemplate
+	public static class QTemplate
 	{
 		/**
 		 * The default fields for this query type
