@@ -430,7 +430,7 @@ public class WQuery
 	 * @author Fastily
 	 *
 	 */
-	protected static class QReply
+	public static class QReply
 	{
 		/**
 		 * Default path to json for {@code prop} queries.
@@ -467,7 +467,7 @@ public class WQuery
 		 * @param k Points to the JsonArray of JsonObject, under {@code query}, of interest.
 		 * @return A lightly processed ArrayList of {@code list} data.
 		 */
-		protected ArrayList<JsonObject> listComp(String k)
+		public List<JsonObject> listComp(String k)
 		{
 			return input.has("query") ? GSONP.getJAofJO(input.getAsJsonObject("query"), k) : new ArrayList<>();
 		}
@@ -480,7 +480,7 @@ public class WQuery
 		 * @param vk Points to the JsonElement to set as the HashMap value in each {@code prop} query item.
 		 * @return A lightly processed HashMap of {@code prop} data.
 		 */
-		protected HashMap<String, JsonElement> propComp(String kk, String vk)
+		public HashMap<String, JsonElement> propComp(String kk, String vk)
 		{
 			HashMap<String, JsonElement> m = new HashMap<>();
 
@@ -500,7 +500,7 @@ public class WQuery
 		 * @param k The key to get a JsonElement for.
 		 * @return The JsonElement pointed to by {@code k} or null/empty JsonObject on error.
 		 */
-		protected JsonElement metaComp(String k)
+		public JsonElement metaComp(String k)
 		{
 			return input.has("query") ? input.getAsJsonObject("query").get(k) : new JsonObject();
 		}
@@ -514,7 +514,7 @@ public class WQuery
 		 * @param m The Map of elements to normalize.
 		 * @return {@code m}, for chaining convenience.
 		 */
-		protected <V> HashMap<String, V> normalize(HashMap<String, V> m)
+		public <V> HashMap<String, V> normalize(HashMap<String, V> m)
 		{
 			if (normalized != null)
 				normalized.forEach((f, t) -> {
