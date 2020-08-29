@@ -524,5 +524,14 @@ public class WQuery
 
 			return m;
 		}
+
+        /**
+         * Returns a copy of the input provided to this reply.
+         *
+         * @return A copy of the input JSON.
+         */
+		public JsonObject getInput() {
+		    return input.deepCopy();
+        }
 	}
 }
