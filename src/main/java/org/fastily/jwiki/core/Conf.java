@@ -8,7 +8,7 @@ import okhttp3.HttpUrl;
  * @author Fastily
  *
  */
-class Conf
+public class Conf
 {
 	/**
 	 * The {@code User-Agent} header to use for HTTP requests.
@@ -70,4 +70,36 @@ class Conf
 		this.baseURL = baseURL;
 		hostname = baseURL.host();
 	}
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public HttpUrl getBaseURL() {
+        return baseURL;
+    }
+
+    public boolean isBot() {
+        return isBot;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public int getMaxResultLimit() {
+        return maxResultLimit;
+    }
+
+    public String getUname() {
+        return uname;
+    }
+
+    public ColorLog getLog() {
+        return log;
+    }
+
+    public String getToken() {
+        return token;
+    }
 }
