@@ -17,7 +17,7 @@ import okhttp3.HttpUrl;
 
 /**
  * Static utility methods for use with Gson.
- * 
+ *
  * @author Fastily
  *
  */
@@ -54,7 +54,7 @@ public class GSONP
 
 	/**
 	 * Convert a JsonObject of JsonObject to an ArrayList of JsonObject.
-	 * 
+	 *
 	 * @param input A JsonObject containing only other JsonObject objects.
 	 * @return An ArrayList of JsonObject derived from {@code input}.
 	 */
@@ -65,7 +65,7 @@ public class GSONP
 
 	/**
 	 * Convert a JsonArray of JsonObject to an ArrayList of JsonObject.
-	 * 
+	 *
 	 * @param input A JsonArray of JsonObject.
 	 * @return An ArrayList of JsonObject derived from {@code input}.
 	 */
@@ -85,7 +85,7 @@ public class GSONP
 	/**
 	 * Get a JsonArray of JsonObject as a List of JsonObject. PRECONDITION: {@code key} points to a JsonArray of
 	 * JsonObject in {@code input}
-	 * 
+	 *
 	 * @param input The source JsonObject.
 	 * @param key Points to a JsonArray of JsonObject
 	 * @return An ArrayList of JsonObject derived from {@code input}, or an empty ArrayList if a JsonArray associated
@@ -99,7 +99,7 @@ public class GSONP
 
 	/**
 	 * Extract a pair of String values from each JsonObject in an ArrayList of JsonObject
-	 * 
+	 *
 	 * @param input The source List
 	 * @param kk Points to each key in to be used in the resulting Map.
 	 * @param vk Points to each value in to be used in the resulting Map.
@@ -112,7 +112,7 @@ public class GSONP
 
 	/**
 	 * Performs a nested JO lookup for the specified path to see if it exists.
-	 * 
+	 *
 	 * @param jo The JsonObject to check.
 	 * @param keys The key path to follow.
 	 * @return True if the path specified by {@code keys} exists, or false otherwise.
@@ -131,12 +131,15 @@ public class GSONP
 			return false;
 		}
 
+		if (last == null)
+		    return false;
+
 		return last.has(keys.get(keys.size() - 1));
 	}
 
 	/**
 	 * Attempt to get a nested JsonObject inside {@code input}.
-	 * 
+	 *
 	 * @param input The parent JsonObject
 	 * @param keys The path to follow to access the nested JsonObject.
 	 * @return The specified JsonObject or null if it could not be found.
@@ -162,7 +165,7 @@ public class GSONP
 	/**
 	 * Attempt to get a nested JsonArray inside {@code input}. This means that the JsonArray is the last element in a set
 	 * of nested JsonObjects.
-	 * 
+	 *
 	 * @param input The parent JsonObject
 	 * @param keys The path to follow to access the nested JsonArray.
 	 * @return The specified JsonArray or null if it could not be found.
@@ -179,7 +182,7 @@ public class GSONP
 
 	/**
 	 * Get a String from a JsonObject. Returns null if a value for {@code key} was not found.
-	 * 
+	 *
 	 * @param jo The JsonObject to look for {@code key} in
 	 * @param key The key to look for
 	 * @return The value associated with {@code key} as a String, or null if the {@code key} could not be found.
@@ -195,7 +198,7 @@ public class GSONP
 
 	/**
 	 * Get a JsonArray of String objects as an ArrayList of String objects.
-	 * 
+	 *
 	 * @param ja The source JsonArray
 	 * @return The ArrayList derived from {@code ja}
 	 */
