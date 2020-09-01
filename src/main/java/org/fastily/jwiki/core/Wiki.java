@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import org.fastily.jwiki.dwrap.Contrib;
 import org.fastily.jwiki.dwrap.ImageInfo;
@@ -1139,17 +1140,38 @@ public class Wiki
 		return MQuery.listUserRights(this, FL.toSAL(user)).get(user);
 	}
 
+    /**
+     * Does the same thing as Special:PrefixIndex.
+     *
+     * @param namespace The optional namespace to filter by. If {@code prefix} starts with a valid namespace prefix, this parameter is ignored. If omitted, defaults to the Main namespace.
+     * @param prefix Get all titles in the specified namespace, that start with this String. To select subpages only, append a {@code /} to the end of this parameter.
+     * @return The list of titles starting with the specified prefix.
+     */
+	public ArrayList<String> prefixIndex(NS namespace, String prefix) {
+	    return namespace == null ? prefixIndex(prefix) : prefixIndex(prefix, namespace);
+    }
+
 	/**
 	 * Does the same thing as Special:PrefixIndex.
 	 * 
-	 * @param namespace The namespace to filter by (inclusive)
+	 * @param namespaces The optional namespaces to filter by. If {@code prefix} starts with a valid namespace prefix, this parameter is ignored. If omitted, defaults to the Main namespace.
 	 * @param prefix Get all titles in the specified namespace, that start with this String. To select subpages only, append a {@code /} to the end of this parameter.
-	 * @return The list of titles starting with the specified prefix
+	 * @return The list of titles starting with the specified prefix.
 	 */
-	public ArrayList<String> prefixIndex(NS namespace, String prefix)
+	public ArrayList<String> prefixIndex(String prefix, NS... namespaces)
 	{
 		conf.log.info(this, "Doing prefix index search for " + prefix);
-		return allPages(prefix, false, false, -1, namespace);
+        WQuery wq = new WQuery(this, -1, WQuery.PREFIXSEARCH);
+        if (prefix != null)
+            wq.set("pssearch", prefix);
+        if (namespaces != null)
+            wq.set("psnamespace", String.join("|", Arrays.stream(namespaces).map(ns -> ns.v + "").collect(Collectors.toSet())));
+
+        ArrayList<String> l = new ArrayList<>();
+        while (wq.has())
+            l.addAll(FL.toAL(wq.next().listComp("prefixsearch").stream().map(jo -> GSONP.getStr(jo, "title"))));
+
+        return l;
 	}
 
 	/**

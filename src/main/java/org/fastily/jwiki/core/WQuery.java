@@ -206,7 +206,12 @@ public class WQuery
 	public static final QTemplate USERUPLOADS = new QTemplate(FL.pMap("list", "allimages", "aisort", "timestamp", "aiuser", null),
 			"ailimit", "allimages");
 
-	/**
+    /**
+     * Default parameters for listing pages with prefix.
+     */
+    public static final QTemplate PREFIXSEARCH = new QTemplate(FL.pMap("list", "prefixsearch"), "pslimit", "prefixsearch");
+
+    /**
 	 * Type describing a HashMap with a String key and String value.
 	 */
 	private static Type strMapT = new TypeToken<HashMap<String, String>>() {
