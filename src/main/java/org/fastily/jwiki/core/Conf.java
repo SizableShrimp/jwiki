@@ -43,9 +43,9 @@ public class Conf
 	protected String uname = null;
 
 	/**
-	 * The logger associated with this Conf.
+	 * Flag indicating whether logs should be prefixed with the current wiki instance.
 	 */
-	protected ColorLog log = new ColorLog(true);
+	protected boolean prefixLogs = true;
 
 	/**
 	 * CSRF token. Used for actions that change Wiki content.
@@ -95,8 +95,8 @@ public class Conf
         return uname;
     }
 
-    public ColorLog getLog() {
-        return log;
+    public boolean isPrefixLogs() {
+	    return prefixLogs;
     }
 
     public String getToken() {

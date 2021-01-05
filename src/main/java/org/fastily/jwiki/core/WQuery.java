@@ -312,8 +312,7 @@ public class WQuery
 			else
 				canCont = false;
 
-			if (wiki.debug)
-				wiki.conf.log.debug(wiki, GSONP.gsonPP.toJson(result));
+			WikiLogger.debug(wiki, GSONP.gsonPP.toJson(result));
 
 			return new QReply(result);
 		}

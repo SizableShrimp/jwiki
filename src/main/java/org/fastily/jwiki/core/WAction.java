@@ -54,8 +54,7 @@ class WAction
 		try
 		{
 			JsonObject result = JsonParser.parseString(wiki.apiclient.basicPOST(FL.pMap("action", action), fl).body().string()).getAsJsonObject();
-			if (wiki.debug)
-				wiki.conf.log.debug(wiki, GSONP.gsonPP.toJson(result));
+			WikiLogger.debug(wiki, GSONP.gsonPP.toJson(result));
 
 			return ActionResult.wrap(result, action);
 		}
@@ -77,7 +76,7 @@ class WAction
 	 */
 	protected static boolean addText(Wiki wiki, String title, String text, String summary, boolean append)
 	{
-		wiki.conf.log.info(wiki, "Adding text to " + title);
+        WikiLogger.info(wiki, "Adding text to {}", title);
 
 		HashMap<String, String> pl = FL.pMap("title", title, append ? "appendtext" : "prependtext", text, "summary", summary);
 		if (wiki.conf.isBot)
@@ -97,7 +96,7 @@ class WAction
 	 */
 	protected static boolean edit(Wiki wiki, String title, String text, String summary)
 	{
-		wiki.conf.log.info(wiki, "Editing " + title);
+        WikiLogger.info(wiki, "Editing {}", title);
 
 		HashMap<String, String> pl = FL.pMap("title", title, "text", text, "summary", summary);
 		if (wiki.conf.isBot)
@@ -111,7 +110,7 @@ class WAction
 				case RATELIMITED:
 					try
 					{
-						wiki.conf.log.fyi(wiki, "Ratelimited by server, sleeping 10 seconds");
+                        WikiLogger.trace(wiki, "Ratelimited by server, sleeping 10 seconds");
 						Thread.sleep(10000);
 					}
 					catch (Throwable e)
@@ -121,14 +120,14 @@ class WAction
 					}
 					break;
 				case PROTECTED:
-					wiki.conf.log.error(wiki, title + " is protected, cannot edit.");
+                    WikiLogger.error(wiki, "{} is protected, cannot edit.", title);
 					return false;
 
 				default:
-					wiki.conf.log.warn(wiki, "Got an error, retrying: " + i);
+                    WikiLogger.warn(wiki, "Got an error, retrying: {}", i);
 			}
 
-		wiki.conf.log.error(wiki, String.format("Could not edit '%s', aborting.", title));
+        WikiLogger.error(wiki, "Could not edit '{}', aborting.", title);
 		return false;
 	}
 
@@ -171,7 +170,7 @@ class WAction
 	 */
 	protected static boolean delete(Wiki wiki, String title, String reason)
 	{
-		wiki.conf.log.info(wiki, "Deleting " + title);
+        WikiLogger.info(wiki, "Deleting {}", title);
 		return postAction(wiki, "delete", true, FL.pMap("title", title, "reason", reason)) == ActionResult.NONE;
 	}
 
@@ -185,7 +184,7 @@ class WAction
 	 */
 	protected static boolean undelete(Wiki wiki, String title, String reason)
 	{
-		wiki.conf.log.info(wiki, "Restoring " + title);
+        WikiLogger.info(wiki, "Restoring {}", title);
 
 		for (int i = 0; i < 10; i++)
 			if (postAction(wiki, "undelete", true, FL.pMap("title", title, "reason", reason)) == ActionResult.NONE)
@@ -202,7 +201,7 @@ class WAction
 	 */
 	protected static void purge(Wiki wiki, ArrayList<String> titles)
 	{
-		wiki.conf.log.info(wiki, "Purging:" + titles);
+        WikiLogger.info(wiki, "Purging {}", titles);
 
 		HashMap<String, String> pl = FL.pMap("titles", FL.pipeFence(titles));
 		postAction(wiki, "purge", false, pl);
@@ -220,7 +219,7 @@ class WAction
 	 */
 	protected static boolean upload(Wiki wiki, String title, String desc, String summary, Path file)
 	{
-		wiki.conf.log.info(wiki, "Uploading " + file);
+        WikiLogger.info(wiki, "Uploading {}", file);
 
 		try
 		{
@@ -232,7 +231,7 @@ class WAction
 			Chunk c;
 			while ((c = cm.nextChunk()) != null)
 			{
-				wiki.conf.log.fyi(wiki, String.format("Uploading chunk [%d of %d] of '%s'", cm.chunkCnt, cm.totalChunks, file));
+				WikiLogger.trace(wiki, "Uploading chunk [{} of {}] of '{}'", cm.chunkCnt, cm.totalChunks, file);
 
 				HashMap<String, String> pl = FL.pMap("format", "json", "filename", title, "token", wiki.conf.token, "ignorewarnings", "1", "stash", "1", "offset", "" + c.offset, "filesize",
 						"" + c.filesize);
@@ -245,7 +244,7 @@ class WAction
 						Response r = wiki.apiclient.multiPartFilePOST(FL.pMap("action", "upload"), pl, fn, c.bl);
 						if (!r.isSuccessful())
 						{
-							wiki.conf.log.error(wiki, "Bad response from server: " + r.code());
+                            WikiLogger.error(wiki, "Bad response from server: {}", r.code());
 							continue;
 						}
 
@@ -255,19 +254,19 @@ class WAction
 					}
 					catch (Throwable e)
 					{
-						wiki.conf.log.error(wiki, "Encountered an error, retrying - " + i);
+                        WikiLogger.error(wiki, "Encountered an error, retrying - {}", i);
 						e.printStackTrace();
 					}
 			}
 
 			for (int i = 0; i < 3; i++)
 			{
-				wiki.conf.log.info(wiki, String.format("Unstashing '%s' as '%s'", filekey, title));
+                WikiLogger.info(wiki, "Unstashing '{}' as '{}'", filekey, title);
 
 				if (postAction(wiki, "upload", true, FL.pMap("filename", title, "text", desc, "comment", summary, "filekey", filekey, "ignorewarnings", "true")) == ActionResult.SUCCESS)
 					return true;
 
-				wiki.conf.log.error(wiki, "Encountered an error while unstashing, retrying - " + i);
+                WikiLogger.error(wiki, "Encountered an error while unstashing, retrying - {}", i);
 			}
 
 			return false;
@@ -291,7 +290,7 @@ class WAction
 	 */
 	protected static boolean uploadByUrl(Wiki wiki, HttpUrl url, String title, String desc, String summary)
 	{
-		wiki.conf.log.info(wiki, String.format("Uploading '%s' to '%s'", url, title));
+        WikiLogger.info(wiki, "Uploading '{}' to '{}'", url, title);
 
 		return postAction(wiki, "upload", true, FL.pMap("filename", title, "text", desc, "comment", summary, "ignorewarnings", "true", "url", url.toString())) == ActionResult.SUCCESS;
 	}
@@ -356,7 +355,7 @@ class WAction
 						case "Success":
 							return SUCCESS;
 						default:
-							System.err.printf("Something isn't right.  Got back '%s', missing a 'result'?%n", GSONP.gson.toJson(jo));
+							WikiLogger.error(null, "Something isn't right.  Got back '{}', missing a 'result'?", GSONP.gson.toJson(jo));
 					}
 				else if (jo.has("error"))
 					switch (GSONP.getStr(jo.getAsJsonObject("error"), "code"))
