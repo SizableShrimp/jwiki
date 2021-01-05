@@ -146,7 +146,7 @@ class WAction
 	 */
 	protected static boolean move(Wiki wiki, String title, String newTitle, boolean moveTalk, boolean moveSubpages, boolean supressRedirect, String reason)
 	{
-		wiki.conf.log.info(wiki, String.format("Moving %s to %s", title, newTitle));
+		WikiLogger.info(wiki, "Moving {} to {}", title, newTitle);
 
 		HashMap<String, String> pl = FL.pMap("from", title, "to", newTitle, "reason", reason);
 
