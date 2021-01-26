@@ -2,22 +2,19 @@ package org.fastily.jwiki.dwrap;
 
 /**
  * Represents a Recent Changes entry.
- * 
- * @author Fastily
  *
+ * @author Fastily
  */
-public class RCEntry extends DataEntry
-{
-	/**
-	 * The type of entry this RCEntry represents (ex: log, edit, new)
-	 */
-	public String type;
+public class RCEntry extends DataEntry {
+    /**
+     * The type of entry this RCEntry represents (ex: log, edit, new)
+     */
+    public String type;
 
-	/**
-	 * Constructor, creates an RCEntry with all null fields.
-	 */
-	protected RCEntry()
-	{
+    /**
+     * Constructor, creates an RCEntry with all null fields.
+     */
+    protected RCEntry() {
 
-	}
+    }
 }

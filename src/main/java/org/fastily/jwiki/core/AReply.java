@@ -46,7 +46,7 @@ public class AReply {
         if (response.has("error")) {
             return Type.ERROR;
         } else if (response.has(action)) {
-            return  Type.SUCCESS;
+            return Type.SUCCESS;
         } else {
             return Type.UNKNOWN;
         }

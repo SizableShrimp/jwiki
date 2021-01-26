@@ -80,7 +80,7 @@ public class QReply extends AReply {
             return m;
 
         for (JsonObject jo : GSONP.getJOofJO(x)) {
-                m.put(GSONP.getStr(jo, kk), jo.has(vk) ? jo.get(vk).deepCopy() : null);
+            m.put(GSONP.getStr(jo, kk), jo.has(vk) ? jo.get(vk).deepCopy() : null);
         }
 
         return normalize(m);
