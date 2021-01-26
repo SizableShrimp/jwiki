@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.JsonObject;
+import org.fastily.jwiki.dwrap.TokenizedResponse;
 import org.fastily.jwiki.util.FL;
 
 import okhttp3.Cookie;
@@ -42,7 +44,7 @@ class ApiClient
 	/**
 	 * The Wiki object tied to this ApiClient.
 	 */
-	private Wiki wiki;
+	private final Wiki wiki;
 
 	/**
 	 * Constructor, create a new ApiClient for a Wiki instance.
@@ -109,8 +111,28 @@ class ApiClient
 		return client.newCall(startReq(params).get().build()).execute();
 	}
 
+    /**
+     * Basic {@code GET} to the MediaWiki API with a retry if the login token has expired.
+     *
+     * @param params Any URL parameters (not URL-encoded).
+     * @return A {@link TokenizedResponse} object with the result of this Request.
+     * @throws IOException Network error
+     */
+	protected TokenizedResponse basicTokenizedGET(HashMap<String, String> params) throws IOException
+    {
+        TokenizedResponse response = new TokenizedResponse(this.basicGET(params));
+
+        if (isBadToken(response)) {
+            wiki.refreshLoginStatus();
+            // Only attempt once after refreshing login
+            return new TokenizedResponse(this.basicGET(params));
+        }
+
+        return response;
+    }
+
 	/**
-	 * Basic form-data {@code POST} to the MediaWiki api.
+	 * Basic form-data {@code POST} to the MediaWiki API.
 	 * 
 	 * @param params Any URL parameters (not URL-encoded).
 	 * @param form The Key-Value form parameters to {@code POST}.
@@ -124,6 +146,27 @@ class ApiClient
 
 		return client.newCall(startReq(params).post(fb.build()).build()).execute();
 	}
+
+    /**
+     * Basic form-data {@code POST} to the MediaWiki API with a retry if the login token has expired.
+     *
+     * @param params Any URL parameters (not URL-encoded).
+     * @param form The Key-Value form parameters to {@code POST}.
+     * @return A {@link TokenizedResponse} object with the result of this Request.
+     * @throws IOException Network error
+     */
+    protected TokenizedResponse basicTokenizedPOST(HashMap<String, String> params, HashMap<String, String> form) throws IOException
+    {
+        TokenizedResponse response = new TokenizedResponse(this.basicPOST(params, form));
+
+        if (isBadToken(response)) {
+            wiki.refreshLoginStatus();
+            // Only attempt once after refreshing login
+            return new TokenizedResponse(this.basicPOST(params, form));
+        }
+
+        return response;
+    }
 
 	/**
 	 * Performs a multi-part file {@code POST}.
@@ -147,6 +190,19 @@ class ApiClient
 		return client.newCall(r).execute();
 	}
 
+	protected static boolean isBadToken(TokenizedResponse response) {
+        JsonObject json = response.getJsonBody();
+
+        if (json.has("error")) {
+            JsonObject error = json.getAsJsonObject("error");
+            String code = error.getAsJsonPrimitive("code").getAsString();
+            if ("badtoken".equals(code)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 	/**
 	 * Basic CookieJar policy for use with jwiki.
 	 * 

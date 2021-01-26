@@ -14,6 +14,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import okhttp3.HttpUrl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Static utility methods for use with Gson.
@@ -23,6 +25,7 @@ import okhttp3.HttpUrl;
  */
 public class GSONP
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GSONP.class);
 	/**
 	 * Default json deserializer for Instant objects.
 	 */
@@ -77,7 +80,7 @@ public class GSONP
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+			LOGGER.error("Error when converting array of JSON objects to list", e);
 			return null;
 		}
 	}
@@ -157,7 +160,7 @@ public class GSONP
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+            LOGGER.error("Error when retrieving nested JSON object", e);
 			return null;
 		}
 	}

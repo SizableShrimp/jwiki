@@ -8,9 +8,7 @@ import java.util.List;
 import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -306,19 +304,20 @@ public class WQuery
 				canCont = false;
 			}
 
-			JsonObject result = JsonParser.parseString(wiki.apiclient.basicGET(pl).body().string()).getAsJsonObject();
+			JsonObject result = wiki.apiclient.basicTokenizedGET(pl).getJsonBody();
 			if (result.has("continue"))
 				pl.putAll(GSONP.gson.fromJson(result.getAsJsonObject("continue"), strMapT));
 			else
 				canCont = false;
 
-			WikiLogger.debug(wiki, GSONP.gsonPP.toJson(result));
+			if (WikiLogger.isTraceEnabled())
+			    WikiLogger.trace(wiki, GSONP.gsonPP.toJson(result));
 
-			return new QReply(result);
+			return QReply.wrap(result);
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+			WikiLogger.error(wiki, "Error when querying API", e);
 			return null;
 		}
 	}
@@ -376,166 +375,4 @@ public class WQuery
 		return this;
 	}
 
-	/**
-	 * Stores parameter definition rules for a given query and can use these rules to generate a QueryUnit.
-	 * 
-	 * @author Fastily
-	 *
-	 */
-	public static class QTemplate
-	{
-		/**
-		 * The default fields for this query type
-		 */
-		private final HashMap<String, String> defaultFields;
-
-		/**
-		 * Optional limit parameter. Will be null if not applicable in this definition.
-		 */
-		private final String limString;
-
-		/**
-		 * An id which can be used to lookup a query result (in JSON) for a query created from this Object.
-		 */
-		protected final String id;
-
-		/**
-		 * Constructor, creates a new QueryUnitTemplate
-		 * 
-		 * @param defaultFields The default parameters for the query described by this QueryUnitTemplate.
-		 * @param id The id to use to lookup a query result for queries created with this Object.
-		 */
-		public QTemplate(HashMap<String, String> defaultFields, String id)
-		{
-			this(defaultFields, null, id);
-		}
-
-		/**
-		 * Constructor, creates a new QueryUnitTemplate with a limit String.
-		 * 
-		 * @param defaultFields The default parameters for the query described by this QueryUnitTemplate.
-		 * @param limString The limit String parameter. Optional, set null to disable.
-		 * @param id The id to use to lookup a query result for queries created with this Object.
-		 */
-		public QTemplate(HashMap<String, String> defaultFields, String limString, String id)
-		{
-			this.defaultFields = defaultFields;
-			this.id = id;
-
-			this.limString = limString;
-			if (limString != null)
-				defaultFields.put(limString, "max");
-		}
-	}
-
-	/**
-	 * A Response from the server for query modules. Contains pre-defined comprehension methods for convenience.
-	 * 
-	 * @author Fastily
-	 *
-	 */
-	public static class QReply
-	{
-		/**
-		 * Default path to json for {@code prop} queries.
-		 */
-		protected static final ArrayList<String> defaultPropPTJ = FL.toSAL("query", "pages");
-
-		/**
-		 * Tracks {@code normalized} titles. The key is the {@code from} (non-normalized) title and the value is the
-		 * {@code to} (normalized) title.
-		 */
-		private HashMap<String, String> normalized = null;
-
-		/**
-		 * The JsonObject which was passed as input
-		 */
-		protected final JsonObject input;
-
-		/**
-		 * Creates a new QReply. Will parse the {@code normalized} JsonArray if it is found in {@code input}.
-		 * 
-		 * @param input The Response received from the server.
-		 */
-		private QReply(JsonObject input)
-		{
-			this.input = input;
-
-			if (GSONP.nestedHas(input, FL.toSAL("query", "normalized")))
-				normalized = GSONP.pairOff(GSONP.getJAofJO(GSONP.getNestedJA(input, FL.toSAL("query", "normalized"))), "from", "to");
-		}
-
-		/**
-		 * Performs simple {@code list} query Response comprehension. Collects listed JsonObject items in an ArrayList.
-		 * 
-		 * @param k Points to the JsonArray of JsonObject, under {@code query}, of interest.
-		 * @return A lightly processed ArrayList of {@code list} data.
-		 */
-		public List<JsonObject> listComp(String k)
-		{
-			return input.has("query") ? GSONP.getJAofJO(input.getAsJsonObject("query"), k) : new ArrayList<>();
-		}
-
-		/**
-		 * Performs simple {@code prop} query Response comprehension. Collects two values from each returned {@code prop}
-		 * query item in a HashMap. Title normalization is automatically applied.
-		 * 
-		 * @param kk Points to the String to set as the HashMap key in each {@code prop} query item.
-		 * @param vk Points to the JsonElement to set as the HashMap value in each {@code prop} query item.
-		 * @return A lightly processed HashMap of {@code prop} data.
-		 */
-		public HashMap<String, JsonElement> propComp(String kk, String vk)
-		{
-			HashMap<String, JsonElement> m = new HashMap<>();
-
-			JsonObject x = GSONP.getNestedJO(input, defaultPropPTJ);
-			if (x == null)
-				return m;
-
-			for (JsonObject jo : GSONP.getJOofJO(x))
-				m.put(GSONP.getStr(jo, kk), jo.get(vk));
-
-			return normalize(m);
-		}
-
-		/**
-		 * Performs simple {@code meta} query Response comprehension.
-		 * 
-		 * @param k The key to get a JsonElement for.
-		 * @return The JsonElement pointed to by {@code k} or null/empty JsonObject on error.
-		 */
-		public JsonElement metaComp(String k)
-		{
-			return input.has("query") ? input.getAsJsonObject("query").get(k) : new JsonObject();
-		}
-
-		/**
-		 * Performs title normalization when it is automatically done by MediaWiki. MediaWiki will return a
-		 * {@code normalized} JsonArray when it fixes lightly malformed titles. This is intended for use with {@code prop}
-		 * style queries.
-		 * 
-		 * @param <V> Any Object.
-		 * @param m The Map of elements to normalize.
-		 * @return {@code m}, for chaining convenience.
-		 */
-		public <V> HashMap<String, V> normalize(HashMap<String, V> m)
-		{
-			if (normalized != null)
-				normalized.forEach((f, t) -> {
-					if (m.containsKey(t))
-						m.put(f, m.get(t));
-				});
-
-			return m;
-		}
-
-        /**
-         * Returns a copy of the input provided to this reply.
-         *
-         * @return A copy of the input JSON.
-         */
-		public JsonObject getInput() {
-		    return input.deepCopy();
-        }
-	}
 }

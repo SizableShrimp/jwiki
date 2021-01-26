@@ -51,7 +51,7 @@ public class WParser
 		{
 			XMLEventReader r = XMLInputFactory.newInstance()
 					.createXMLEventReader(new StringReader(GSONP
-							.getStr(GSONP.getNestedJO(JsonParser.parseString(wiki.basicPOST("parse", queryParams).body().string()).getAsJsonObject(),
+							.getStr(GSONP.getNestedJO(JsonParser.parseString(wiki.basicPOST("parse", queryParams).getBody()).getAsJsonObject(),
 									FL.toSAL("parse", "parsetree")), "*")));
 
 			WikiText root = new WikiText();
@@ -68,7 +68,7 @@ public class WParser
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+			WikiLogger.error(wiki, "Error parsing wikitext", e);
 			return null;
 		}
 	}

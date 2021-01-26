@@ -19,6 +19,7 @@ import org.fastily.jwiki.dwrap.PageSection;
 import org.fastily.jwiki.dwrap.ProtectedTitleEntry;
 import org.fastily.jwiki.dwrap.RCEntry;
 import org.fastily.jwiki.dwrap.Revision;
+import org.fastily.jwiki.dwrap.TokenizedResponse;
 import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
 import org.fastily.jwiki.util.Tuple;
@@ -27,8 +28,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import okhttp3.HttpUrl;
-import okhttp3.Response;
-import org.slf4j.Logger;
 
 /**
  * Main entry point of jwiki. This class aggregates most of the queries/actions which jwiki can perform on a wiki. All methods are backed by static functions and are therefore thread-safe.
@@ -48,7 +47,7 @@ public class Wiki
 		/**
 		 * The Wiki
 		 */
-		private Wiki wiki = new Wiki();
+		private final Wiki wiki = new Wiki();
 
 		/**
 		 * The Proxy to use
@@ -122,23 +121,6 @@ public class Wiki
 			return withApiEndpoint(HttpUrl.parse(String.format("https://%s/w/api.php", domain)));
 		}
 
-		/**
-		 * Historically, configured the Wiki to use the default jwiki logger. Now, this is a no-op.
-         * Please use a log binding like <a href="logback.qos.ch">Logback</a> which integrates with
-         * <a href="slf4j.org">SLF4J</a> for logging support.
-		 *
-         * @deprecated jwiki now uses the <a href="slf4j.org">SLF4J</a> API for logging;
-         *             please use a log binding like <a href="logback.qos.ch">Logback</a>.
-		 * @param enableLogging Historically, set false to disable jwiki's built-in logging.
-		 * @return This Builder
-		 */
-		@Deprecated
-		public Builder withDefaultLogger(boolean enableLogging)
-		{
-			// wiki.conf.log.enabled = enableLogging;
-			return this;
-		}
-
         /**
          * Configures the Wiki to prefix logs with the current wiki instance. Defaults to true.
          *
@@ -166,23 +148,6 @@ public class Wiki
 		}
 
 		/**
-		 * Historically, configured the Wiki to be created to print *all* the messages. Now, this is a no-op.
-         * Please use a log binding like <a href="logback.qos.ch">Logback</a> which integrates with
-         * <a href="slf4j.org">SLF4J</a> for logging support.
-		 *
-         * @deprecated jwiki now uses the <a href="slf4j.org">SLF4J</a> API for logging;
-         *             please use a log binding like <a href="logback.qos.ch">Logback</a>.
-		 * @param enableDebug Historically, set true to enable debug mode.
-		 * @return This Builder
-		 */
-		@Deprecated
-		public Builder withDebug(boolean enableDebug)
-		{
-			// wiki.debug = enableDebug;
-			return this;
-		}
-
-		/**
 		 * Performs the task of creating the Wiki object as configured. If {@link #withApiEndpoint(HttpUrl)} or {@link #withDomain(String)} were not called, then the resulting Wiki will default to the
 		 * <a href="https://en.wikipedia.org/w/api.php">Wikipedia API</a>.
 		 * 
@@ -200,13 +165,6 @@ public class Wiki
 			return wiki;
 		}
 	}
-
-	/**
-	 * Toggles logging of debug information to stderr. Disabled (false) by default. Changes take effect immediately.
-     * @deprecated No longer has a use because of <a href="slf4j.org">SLF4J</a>.
-	 */
-	@Deprecated
-	public boolean debug = false;
 
 	/**
 	 * Our list of currently logged in Wiki's associated with this object. Useful for global operations.
@@ -272,7 +230,7 @@ public class Wiki
         WikiLogger.info(this, "Try login for {}", user);
 		try
 		{
-			if (WAction.postAction(this, "login", false, FL.pMap("lgname", user, "lgpassword", password, "lgtoken", getTokens(WQuery.TOKENS_LOGIN, "logintoken"))) == WAction.ActionResult.SUCCESS)
+			if (WAction.postAction(this, "login", false, FL.pMap("lgname", user, "lgpassword", password, "lgtoken", getTokens(WQuery.TOKENS_LOGIN, "logintoken"))).isSuccess())
 			{
 				refreshLoginStatus();
 
@@ -282,7 +240,7 @@ public class Wiki
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+			WikiLogger.error(this, "Error while logging in", e);
 		}
 
 		return false;
@@ -307,7 +265,7 @@ public class Wiki
 	 * @param tk The key pointing to the String with the specified token.
 	 * @return The token, or null on error.
 	 */
-	private String getTokens(WQuery.QTemplate wqt, String tk)
+	private String getTokens(QTemplate wqt, String tk)
 	{
 		try
 		{
@@ -315,8 +273,8 @@ public class Wiki
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
-			return null;
+            WikiLogger.error(this, "Error when retrieving tokens", e);
+            return null;
 		}
 	}
 
@@ -324,60 +282,62 @@ public class Wiki
 	/* /////////////////////////// UTILITY FUNCTIONS ////////////////////////////////// */
 	/* //////////////////////////////////////////////////////////////////////////////// */
 
-	/**
-	 * Performs a basic GET action on this Wiki. Use this to implement custom or non-standard API calls.
-	 * 
-	 * @param action The action to perform.
-	 * @param params Each parameter and its corresponding value. For example, the parameters, {@code &amp;foo=bar&amp;baz=blah}, should be passed in as {{@code "foo", "bar", "baz", "blah"}}.
-	 *           URL-encoding will be applied automatically.
-	 * @return The Response from the server, or null on error.
-	 */
-	public Response basicGET(String action, String... params)
-	{
-		HashMap<String, String> pl = FL.pMap(params);
-		pl.put("action", action);
-		pl.put("format", "json");
+    /**
+     * Performs a basic GET action on this Wiki. Use this to implement custom or non-standard API calls.
+     * This will attempt to retry the request if the login token has expired.
+     *
+     * @param action The action to perform.
+     * @param params Each parameter and its corresponding value. For example, the parameters, {@code &amp;foo=bar&amp;baz=blah}, should be passed in as {{@code "foo", "bar", "baz", "blah"}}.
+     *           URL-encoding will be applied automatically.
+     * @return The {@link TokenizedResponse} from the server, or null on error.
+     */
+    public TokenizedResponse basicGET(String action, String... params)
+    {
+        HashMap<String, String> pl = FL.pMap(params);
+        pl.put("action", action);
+        pl.put("format", "json");
 
-		try
-		{
-			return apiclient.basicGET(pl);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace();
-			return null;
-		}
-	}
+        try
+        {
+            return this.apiclient.basicTokenizedGET(pl);
+        }
+        catch (Throwable e)
+        {
+            WikiLogger.error(this, "Error while performing basic GET", e);
+            return null;
+        }
+    }
 
-	/**
-	 * Performs a basic POST action on this Wiki. Use this to implement custom or non-standard API calls.
-	 * 
-	 * @param action The action to perform.
-	 * @param form The form data to post. This will be automatically URL-encoded.
-	 * @return The Response from the server, or null on error.
-	 */
-	public Response basicPOST(String action, HashMap<String, String> form)
-	{
-		form.put("format", "json");
+    /**
+     * Performs a basic POST action on this Wiki. Use this to implement custom or non-standard API calls.
+     * This will attempt to retry the request if the login token has expired.
+     *
+     * @param action The action to perform.
+     * @param form The form data to post. This will be automatically URL-encoded.
+     * @return The {@link TokenizedResponse} from the server, or null on error.
+     */
+    public TokenizedResponse basicPOST(String action, HashMap<String, String> form)
+    {
+        form.put("format", "json");
 
-		try
-		{
-			return apiclient.basicPOST(FL.pMap("action", action), form);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace();
-			return null;
-		}
-	}
+        try
+        {
+            return this.apiclient.basicTokenizedPOST(FL.pMap("action", action), form);
+        }
+        catch (Throwable e)
+        {
+            WikiLogger.error(this, "Error during basic POST", e);
+            return null;
+        }
+    }
 
-	/**
+    /**
 	 * Refresh the Namespace list.
 	 */
 	private void refreshNS()
 	{
 		WikiLogger.info(this, "Fetching Namespace List");
-		nsl = new NS.NSManager(new WQuery(this, WQuery.NAMESPACES).next().input.getAsJsonObject("query"));
+		nsl = new NS.NSManager(new WQuery(this, WQuery.NAMESPACES).next().getSuccessJson());
 	}
 
 	/**
@@ -439,7 +399,7 @@ public class Wiki
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+            WikiLogger.error(this, "Error when retrieving wiki", e);
 			return null;
 		}
 	}
@@ -493,7 +453,7 @@ public class Wiki
 		else if (ns.equals(NS.TALK))
 			return nss(title);
 
-		return (String) nsl.nsM.get(ns.v - 1) + ":" + nss(title);
+		return nsl.nsM.get(ns.v - 1) + ":" + nss(title);
 	}
 
 	/**
@@ -542,9 +502,9 @@ public class Wiki
 	 * @param add The text to append
 	 * @param reason The reason to use.
 	 * @param top Set to true to prepend text. False will append text.
-	 * @return True if we were successful.
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean addText(String title, String add, String reason, boolean top)
+	public AReply addText(String title, String add, String reason, boolean top)
 	{
 		return WAction.addText(this, title, add, reason, !top);
 	}
@@ -555,22 +515,21 @@ public class Wiki
 	 * @param title The title to use
 	 * @param text The text to use
 	 * @param reason The edit summary to use
-	 * 
-	 * @return True if the operation was successful.
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean edit(String title, String text, String reason)
+	public AReply edit(String title, String text, String reason)
 	{
 		return WAction.edit(this, title, text, reason);
 	}
 
 	/**
-	 * Deletes a page. You must have admin rights or this won't work.
+	 * Deletes a page. You must have the proper rights.
 	 * 
 	 * @param title Title to delete
 	 * @param reason The reason to use
-	 * @return True if the operation was successful.
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean delete(String title, String reason)
+	public AReply delete(String title, String reason)
 	{
 		return WAction.delete(this, title, reason);
 	}
@@ -585,9 +544,9 @@ public class Wiki
 	 * @param supressRedirect Flag indicating if a redirect to {@code newTitle} should be automatically generated at {@code title}. Requires admin/pagemover rights, otherwise this does nothing.
 	 *           Optional, set false to disable.
 	 * @param reason The edit summary to use
-	 * @return True if the operation succeeded
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean move(String title, String newTitle, boolean moveTalk, boolean moveSubpages, boolean supressRedirect, String reason)
+	public AReply move(String title, String newTitle, boolean moveTalk, boolean moveSubpages, boolean supressRedirect, String reason)
 	{
 		return WAction.move(this, title, newTitle, moveTalk, moveSubpages, supressRedirect, reason);
 	}
@@ -629,7 +588,7 @@ public class Wiki
 		String s = getPageText(title);
 		String rx = s.replaceAll(regex, replacement);
 
-		return rx.equals(s) || edit(title, rx, reason);
+		return rx.equals(s) || edit(title, rx, reason).isSuccess();
 	}
 
 	/**
@@ -637,9 +596,9 @@ public class Wiki
 	 * 
 	 * @param title The title to undelete
 	 * @param reason The reason to use
-	 * @return True if we successfully undeleted the page.
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean undelete(String title, String reason)
+	public AReply undelete(String title, String reason)
 	{
 		return WAction.undelete(this, title, reason);
 	}
@@ -651,9 +610,9 @@ public class Wiki
 	 * @param title The title to upload to. Must include "File:" prefix.
 	 * @param text The text to put on the file description page
 	 * @param reason The edit summary
-	 * @return True if we were successful.
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean upload(Path p, String title, String text, String reason)
+	public AReply upload(Path p, String title, String text, String reason)
 	{
 		return WAction.upload(this, title, text, reason, p);
 	}
@@ -665,9 +624,9 @@ public class Wiki
 	 * @param title The title to upload to.
 	 * @param desc The text to put on the file description page
 	 * @param summary The edit summary
-	 * @return True if the upload was successful.
+	 * @return An {@link AReply} object holding the response data and whether it was a success.
 	 */
-	public boolean uploadByUrl(HttpUrl url, String title, String desc, String summary)
+	public AReply uploadByUrl(HttpUrl url, String title, String desc, String summary)
 	{
 		return WAction.uploadByUrl(this, url, title, desc, summary);
 	}
@@ -709,7 +668,7 @@ public class Wiki
 
 	/**
 	 * Checks if a title exists.
-	 * 
+	 *
 	 * @param title The title to query.
 	 * @return True if the title exists.
 	 */
@@ -880,7 +839,7 @@ public class Wiki
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+            WikiLogger.error(this, "Error when retrieving last editor", e);
 			return null;
 		}
 	}
@@ -953,7 +912,7 @@ public class Wiki
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+            WikiLogger.error(this, "Error when retrieving page creator", e);
 			return null;
 		}
 	}
@@ -1216,11 +1175,11 @@ public class Wiki
 		while (wq.has())
 			try
 			{
-				l.addAll(FL.toAL(FL.streamFrom(GSONP.getNestedJA(wq.next().input, FL.toSAL("query", "querypage", "results"))).map(e -> GSONP.getStr(e.getAsJsonObject(), "title"))));
+				l.addAll(FL.toAL(FL.streamFrom(GSONP.getNestedJA(wq.next().getResponse(), FL.toSAL("query", "querypage", "results"))).map(e -> GSONP.getStr(e.getAsJsonObject(), "title"))));
 			}
 			catch (Throwable e)
 			{
-				e.printStackTrace();
+                WikiLogger.error(this, "Error when querying special page", e);
 			}
 		return l;
 	}
@@ -1272,12 +1231,13 @@ public class Wiki
 		try
 		{
 			return PageSection.pageBySection(
-					GSONP.getJAofJO(GSONP.getNestedJA(JsonParser.parseString(basicGET("parse", "prop", "sections", "page", title).body().string()).getAsJsonObject(), FL.toSAL("parse", "sections"))),
+					GSONP.getJAofJO(GSONP.getNestedJA(JsonParser.parseString(basicGET("parse", "prop", "sections",
+                            "page", title).getBody()).getAsJsonObject(), FL.toSAL("parse", "sections"))),
 					getPageText(title));
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+            WikiLogger.error(this, "Error when splitting page by header", e);
 			return new ArrayList<>();
 		}
 	}

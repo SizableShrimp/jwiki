@@ -6,9 +6,9 @@ plugins {
     id 'signing'
 }
 
-description = "${project.name} build script"
+description = "${project.name} - a Java wrapper for the MediaWiki API"
 group = "org.fastily"
-version = "1.8.1"
+version = "2.0.0"
 
 repositories {
     mavenCentral()

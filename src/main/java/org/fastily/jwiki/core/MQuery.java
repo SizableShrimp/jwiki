@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 
-import org.fastily.jwiki.core.WQuery.QTemplate;
 import org.fastily.jwiki.dwrap.ImageInfo;
 import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
