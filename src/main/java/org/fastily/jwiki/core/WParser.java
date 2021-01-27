@@ -30,12 +30,18 @@ import java.util.stream.Collectors;
  * @author Fastily
  */
 public class WParser {
+    private static final XMLInputFactory XML_FACTORY = XMLInputFactory.newInstance();
+
+    static {
+        // Protect against external XML entities
+        XML_FACTORY.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        XML_FACTORY.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    }
+
     /**
      * No constructors needed
      */
-    private WParser() {
-
-    }
+    private WParser() {}
 
     /**
      * Runs a parse query for wikitext/pages and then parses the result into a WikiText object.
@@ -47,10 +53,9 @@ public class WParser {
     private static WikiText parse(Wiki wiki, Map<String, String> queryParams) {
         queryParams.put("prop", "parsetree");
         try {
-            XMLEventReader r = XMLInputFactory.newInstance()
-                    .createXMLEventReader(new StringReader(GSONP
-                            .getStr(GSONP.getNestedJO(JsonParser.parseString(wiki.basicPOST("parse", queryParams).getBody()).getAsJsonObject(),
-                                    FL.toSAL("parse", "parsetree")), "*")));
+            XMLEventReader r = XML_FACTORY.createXMLEventReader(new StringReader(GSONP
+                    .getStr(GSONP.getNestedJO(JsonParser.parseString(wiki.basicPOST("parse", queryParams).getBody()).getAsJsonObject(),
+                            FL.toSAL("parse", "parsetree")), "*")));
 
             WikiText root = new WikiText();
             while (r.hasNext()) {
