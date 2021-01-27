@@ -96,6 +96,6 @@ class ActionTests extends BaseMockTemplate {
     @Test
     void testPurge() {
         addResponse("mockPagePurge");
-        wiki.purge("Foo", "Test", "Wikipedia:Sandbox");
+        assertTrue(wiki.purge("Foo", "Test", "Wikipedia:Sandbox").isSuccess());
     }
 }

@@ -504,9 +504,10 @@ public class Wiki {
      * Purges page caches.
      *
      * @param titles The titles to purge.
+     * @return An {@link AReply} object holding the response data and whether it was a success.
      */
-    public void purge(String... titles) {
-        WAction.purge(this, FL.toSAL(titles));
+    public AReply purge(String... titles) {
+        return WAction.purge(this, FL.toSAL(titles));
     }
 
     /**
