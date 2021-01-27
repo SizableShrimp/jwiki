@@ -15,6 +15,7 @@ import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
 import org.fastily.jwiki.util.Tuple;
 
+import java.io.IOException;
 import java.net.Proxy;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -219,7 +220,7 @@ public class Wiki {
                 WikiLogger.info(this, "Logged in as {}", user);
                 return true;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             WikiLogger.error(this, "Error while logging in", e);
         }
 
@@ -247,7 +248,7 @@ public class Wiki {
     private String getTokens(QTemplate wqt, String tk) {
         try {
             return GSONP.getStr(new WQuery(this, wqt).next().metaComp("tokens").getAsJsonObject(), tk);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             WikiLogger.error(this, "Error when retrieving tokens", e);
             return null;
         }
@@ -273,7 +274,7 @@ public class Wiki {
 
         try {
             return this.apiclient.basicTokenizedGET(pl);
-        } catch (Throwable e) {
+        } catch (IOException e) {
             WikiLogger.error(this, "Error while performing basic GET", e);
             return null;
         }
@@ -292,7 +293,7 @@ public class Wiki {
 
         try {
             return this.apiclient.basicTokenizedPOST(FL.pMap("action", action), form);
-        } catch (Throwable e) {
+        } catch (IOException e) {
             WikiLogger.error(this, "Error during basic POST", e);
             return null;
         }
@@ -358,7 +359,7 @@ public class Wiki {
         WikiLogger.trace(this, "Get Wiki for {} @ {}", whoami(), domain);
         try {
             return wl.containsKey(domain) ? wl.get(domain) : new Wiki(conf.baseURL.newBuilder().host(domain).build(), this);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             WikiLogger.error(this, "Error when retrieving wiki", e);
             return null;
         }
@@ -767,7 +768,7 @@ public class Wiki {
     public String getLastEditor(String title) {
         try {
             return getRevisions(title, 1, false, null, null).get(0).user;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             WikiLogger.error(this, "Error when retrieving last editor", e);
             return null;
         }
@@ -834,7 +835,7 @@ public class Wiki {
     public String getPageCreator(String title) {
         try {
             return getRevisions(title, 1, true, null, null).get(0).user;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             WikiLogger.error(this, "Error when retrieving page creator", e);
             return null;
         }
@@ -1089,7 +1090,7 @@ public class Wiki {
         while (wq.has()) {
             try {
                 l.addAll(FL.streamFrom(GSONP.getNestedJA(wq.next().getResponse(), FL.toSAL("query", "querypage", "results"))).map(e -> GSONP.getStr(e.getAsJsonObject(), "title")).collect(Collectors.toList()));
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 WikiLogger.error(this, "Error when querying special page", e);
             }
         }
@@ -1143,7 +1144,7 @@ public class Wiki {
                     GSONP.getJAofJO(GSONP.getNestedJA(JsonParser.parseString(basicGET("parse", "prop", "sections",
                             "page", title).getBody()).getAsJsonObject(), FL.toSAL("parse", "sections"))),
                     getPageText(title));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             WikiLogger.error(this, "Error when splitting page by header", e);
             return new ArrayList<>();
         }

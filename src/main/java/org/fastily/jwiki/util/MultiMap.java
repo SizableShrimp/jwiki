@@ -28,9 +28,10 @@ public class MultiMap<K, V> extends HashMap<K, List<V>> {
      *
      * @param k The key to add
      * @param v The value to add to the list
+     * @return the value in the map
      */
     public List<V> putValue(K k, V v) {
-        List<V> l = getOrMake(k);
+        List<V> l = touch(k);
         l.add(v);
         return l;
     }
@@ -43,13 +44,19 @@ public class MultiMap<K, V> extends HashMap<K, List<V>> {
      * @return the value in the map
      */
     public List<V> putAll(K k, List<V> v) {
-        List<V> l = getOrMake(k);
+        List<V> l = touch(k);
         l.addAll(v);
         return l;
     }
 
+    /**
+     * Creates the {@link List} entry in the map if it does not already exist and returns it.
+     *
+     * @param k The key
+     * @return the {@link List} in this MultiMap; empty if newly created.
+     */
     @NotNull
-    private List<V> getOrMake(K k) {
+    public List<V> touch(K k) {
         return super.computeIfAbsent(k, x -> new ArrayList<>());
     }
 }

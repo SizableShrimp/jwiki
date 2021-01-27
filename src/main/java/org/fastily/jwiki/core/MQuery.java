@@ -64,6 +64,7 @@ public final class MQuery {
 
             while (wq.has()) {
                 wq.next().propComp("title", elemArrKey).forEach((k, v) -> {
+                    l.touch(k);
                     if (v != null)
                         l.putAll(k, GSONP.getJAofJO(v.getAsJsonArray()));
                 });
@@ -343,7 +344,7 @@ public final class MQuery {
     public static List<String> exists(Wiki wiki, boolean exists, Collection<String> titles) {
         List<String> l = new ArrayList<>();
         exists(wiki, titles).forEach((k, v) -> {
-            if (v == exists)
+            if (Boolean.valueOf(exists).equals(v))
                 l.add(k);
         });
 

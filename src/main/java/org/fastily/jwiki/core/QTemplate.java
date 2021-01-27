@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public class QTemplate {
     /**
-     * The default fields for this query type. These are immutable.
+     * The default fields for this query type.
      */
     protected final Map<String, String> defaultFields;
 
@@ -41,7 +41,7 @@ public class QTemplate {
      * @param id The id to use to lookup a query result for queries created with this Object.
      */
     public QTemplate(Map<String, String> defaultFields, String limString, String id) {
-        this.defaultFields = Map.copyOf(defaultFields);
+        this.defaultFields = defaultFields;
         this.id = id;
 
         this.limString = limString;

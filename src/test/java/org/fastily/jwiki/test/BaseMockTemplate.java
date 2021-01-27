@@ -3,9 +3,12 @@ package org.fastily.jwiki.test;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.fastily.jwiki.core.Wiki;
+import org.fastily.jwiki.core.WikiLogger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -28,25 +31,25 @@ public class BaseMockTemplate {
     /**
      * Initializes mock objects
      *
-     * @throws Throwable If the MockWebServer failed to start.
+     * @throws IOException If the MockWebServer failed to start.
      */
     @BeforeEach
-    public void setUp() throws Throwable {
+    public void setUp() throws IOException {
         server = new MockWebServer();
         server.start();
 
-        System.err.printf("[FYI]: MockServer is @ [%s]%n", server.url("/w/api.php"));
-
         initWiki();
+
+        WikiLogger.info(wiki, "MockServer is @ [{}]", server.url("/w/api.php"));
     }
 
     /**
      * Disposes of mock objects
      *
-     * @throws Throwable If the MockWebServer failed to exit.
+     * @throws IOException If the MockWebServer failed to exit.
      */
     @AfterEach
-    public void tearDown() throws Throwable {
+    public void tearDown() throws IOException {
         wiki = null;
 
         server.shutdown();
@@ -62,9 +65,8 @@ public class BaseMockTemplate {
         try {
             server.enqueue(new MockResponse()
                     .setBody(String.join("\n", Files.readAllLines(Paths.get(getClass().getResource(fn + ".json").toURI())))));
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Should *never* reach here. Is a mock configuration file missing?");
+        } catch (URISyntaxException | IOException e) {
+            WikiLogger.error(wiki, "Error during mock generation response", e);
         }
     }
 

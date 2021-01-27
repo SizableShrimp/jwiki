@@ -125,7 +125,7 @@ public class WAction {
             } else {
                 return reply;
             }
-        } catch (Throwable e) {
+        } catch (InterruptedException | IOException e) {
             if (isPOST) {
                 WikiLogger.error(wiki, "Error when POSTing action", e);
             } else {
@@ -301,7 +301,7 @@ public class WAction {
                         filekey = GSONP.getStr(JsonParser.parseString(r.body().string()).getAsJsonObject().getAsJsonObject("upload"), "filekey");
                         if (filekey != null)
                             break;
-                    } catch (Throwable e) {
+                    } catch (IOException e) {
                         WikiLogger.error(wiki, "Encountered an error, retrying - {}", i, e);
                     }
                 }
@@ -316,7 +316,7 @@ public class WAction {
 
                 WikiLogger.error(wiki, "Encountered an error while unstashing with response {}, retrying - {}", reply.getResponse(), i);
             }
-        } catch (Throwable e) {
+        } catch (IOException e) {
             WikiLogger.error(wiki, "Error while uploading", e);
         }
 
@@ -416,7 +416,7 @@ public class WAction {
 
                 return c;
 
-            } catch (Throwable e) {
+            } catch (IOException e) {
                 WikiLogger.error(null, "Error while uploading chunk", e);
                 return null;
             }

@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -303,9 +304,9 @@ public class WQuery {
                 WikiLogger.trace(wiki, GSONP.gsonPP.toJson(result));
 
             return QReply.wrap(result);
-        } catch (Throwable e) {
+        } catch (IOException e) {
             WikiLogger.error(wiki, "Error when querying API", e);
-            return null;
+            return QReply.NULL_REPLY;
         }
     }
 

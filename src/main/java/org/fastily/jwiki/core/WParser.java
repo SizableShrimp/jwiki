@@ -4,9 +4,11 @@ import com.google.gson.JsonParser;
 import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.StartElement;
@@ -15,9 +17,9 @@ import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,7 +62,7 @@ public class WParser {
                     root.append(cToStr(e));
             }
             return root;
-        } catch (Throwable e) {
+        } catch (XMLStreamException e) {
             WikiLogger.error(wiki, "Error parsing wikitext", e);
             return null;
         }
@@ -94,9 +96,9 @@ public class WParser {
      * @param r The XMLEventReader to use.
      * @param parent The parent WikiText the resulting WTemplate is to belong to, if applicable. Set null to disable.
      * @return The parsed WTemplate.
-     * @throws Throwable On parse error.
+     * @throws XMLStreamException On parse error.
      */
-    private static WTemplate parseTemplate(XMLEventReader r, WikiText parent) throws Throwable {
+    private static WTemplate parseTemplate(XMLEventReader r, WikiText parent) throws XMLStreamException {
         WTemplate t = new WTemplate(parent);
 
         String lastNameParsed = "";
@@ -133,9 +135,9 @@ public class WParser {
      *
      * @param r The XMLEventReader to use.
      * @return WikiText representing this template's parameter value.
-     * @throws Throwable On parse error.
+     * @throws XMLStreamException On parse error.
      */
-    private static WikiText parseTValue(XMLEventReader r) throws Throwable {
+    private static WikiText parseTValue(XMLEventReader r) throws XMLStreamException {
         WikiText root = new WikiText();
 
         while (r.hasNext()) {
@@ -157,9 +159,9 @@ public class WParser {
      *
      * @param r An XMLEventReader where the next XMLEvent object(s) is/are a Characters event(s).
      * @return The Strings of the Characters events as a String.
-     * @throws Throwable On parse error.
+     * @throws XMLStreamException On parse error.
      */
-    private static String getNextElementText(XMLEventReader r) throws Throwable {
+    private static String getNextElementText(XMLEventReader r) throws XMLStreamException {
         StringBuilder x = new StringBuilder();
 
         while (r.hasNext()) {

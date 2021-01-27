@@ -71,7 +71,7 @@ public class GSONP {
     public static List<JsonObject> getJAofJO(JsonArray input) {
         try {
             return FL.streamFrom(input).map(JsonElement::getAsJsonObject).collect(Collectors.toList());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error("Error when converting array of JSON objects to list", e);
             return new ArrayList<>();
         }
@@ -116,7 +116,7 @@ public class GSONP {
         try {
             for (int i = 0; i < keys.size() - 1; i++)
                 last = last.getAsJsonObject(keys.get(i));
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return false;
         }
 
@@ -141,7 +141,7 @@ public class GSONP {
                 jo = jo.getAsJsonObject(s);
 
             return jo;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error("Error when retrieving nested JSON object", e);
             return null;
         }

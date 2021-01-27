@@ -24,8 +24,7 @@ public class ActionTests extends BaseMockTemplate {
 
         try {
             assertTrue(server.takeRequest(2, TimeUnit.SECONDS).getHeader("User-Agent").contains("jwiki"));
-        } catch (Throwable e) {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
             fail(e);
         }
 
@@ -72,7 +71,7 @@ public class ActionTests extends BaseMockTemplate {
 
         try {
             assertTrue(wiki.upload(Paths.get(getClass().getResource("uploadTestFile.svg").toURI()), "TestSVG.svg", "desc", "summary").isSuccess());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             fail("Should never reach here - is the classpath messed up or a test resource missing?", e);
         }
     }
@@ -86,7 +85,7 @@ public class ActionTests extends BaseMockTemplate {
 
         try {
             assertTrue(wiki.uploadByUrl(HttpUrl.parse("https://upload.wikimedia.org/wikipedia/en/a/a1/Example.jpg"), "TestFile.jpg", "desc", "summary").isSuccess());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             fail("Should never reach here - is the classpath messed up or a test resource missing?", e);
         }
     }
