@@ -4,7 +4,9 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.fastily.jwiki.core.Wiki;
 import org.fastily.jwiki.core.WikiLogger;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
@@ -21,7 +23,7 @@ public class BaseMockTemplate {
     /**
      * The mock MediaWiki server
      */
-    protected MockWebServer server;
+    protected static MockWebServer server;
 
     /**
      * The test Wiki object to use.
@@ -29,31 +31,43 @@ public class BaseMockTemplate {
     protected Wiki wiki;
 
     /**
-     * Initializes mock objects
+     * Initializes mock server
      *
      * @throws IOException If the MockWebServer failed to start.
      */
-    @BeforeEach
-    public void setUp() throws IOException {
+    @BeforeAll
+    static void setUpServer() throws IOException {
         server = new MockWebServer();
         server.start();
 
-        initWiki();
-
-        WikiLogger.info(wiki, "MockServer is @ [{}]", server.url("/w/api.php"));
+        WikiLogger.info(null, "MockServer is @ [{}]", server.url("/w/api.php"));
     }
 
     /**
-     * Disposes of mock objects
+     * Disposes of mock server
      *
      * @throws IOException If the MockWebServer failed to exit.
      */
-    @AfterEach
-    public void tearDown() throws IOException {
-        wiki = null;
-
+    @AfterAll
+    static void tearDownServer() throws IOException {
         server.shutdown();
         server = null;
+    }
+
+    /**
+     * Initializes mock wiki
+     */
+    @BeforeEach
+    void setUp() {
+        initWiki();
+    }
+
+    /**
+     * Disposes of mock wiki
+     */
+    @AfterEach
+    void tearDown() {
+        wiki = null;
     }
 
     /**
