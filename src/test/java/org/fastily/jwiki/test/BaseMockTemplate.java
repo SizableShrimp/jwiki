@@ -14,6 +14,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 /**
  * Template for mock tests.
  *
@@ -81,6 +83,7 @@ public class BaseMockTemplate {
                     .setBody(String.join("\n", Files.readAllLines(Paths.get(getClass().getResource(fn + ".json").toURI())))));
         } catch (URISyntaxException | IOException e) {
             WikiLogger.error(wiki, "Error during mock generation response", e);
+            fail(e);
         }
     }
 

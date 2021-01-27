@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Fastily
  */
-public class AuthActionTests extends BaseMockTemplate {
+class AuthActionTests extends BaseMockTemplate {
     /**
      * Initializes a logged-in Wiki.
      */

@@ -18,12 +18,12 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Fastily
  */
-public class MockQueryTests extends BaseMockTemplate {
+class MockQueryTests extends BaseMockTemplate {
     /**
      * Mock fetching of random pages
      */
     @Test
-    public void testGetRandomPages() {
+    void testGetRandomPages() {
         addResponse("mockRandom");
         List<String> l = wiki.getRandomPages(3, NS.FILE, NS.MAIN);
 
@@ -35,7 +35,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Test fetching of global usage.
      */
     @Test
-    public void testGlobalUsage() {
+    void testGlobalUsage() {
         addResponse("mockGlobalUsage");
 
         List<Tuple<String, String>> l = wiki.globalUsage("File:Example.jpg");
@@ -56,7 +56,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Test protected title fetching
      */
     @Test
-    public void testProtectedTitles() {
+    void testProtectedTitles() {
         addResponse("mockProtectedTitles");
 
         List<ProtectedTitleEntry> l = wiki.getProtectedTitles(3, true);
@@ -86,7 +86,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Test recent changes fetching.
      */
     @Test
-    public void testRecentChanges() {
+    void testRecentChanges() {
         addResponse("mockRecentChanges");
 
         List<RCEntry> l = wiki.getRecentChanges(Instant.parse("2017-12-31T02:06:08Z"), Instant.parse("2017-12-31T02:06:09Z"));
@@ -116,7 +116,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Test log entry fetching.
      */
     @Test
-    public void testGetLogs() {
+    void testGetLogs() {
         // Test 1
         addResponse("mockLogEntry1");
         List<LogEntry> l = wiki.getLogs("File:Example.jpg", "Fastily", "delete", -1);
@@ -166,7 +166,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Tests querying of special pages.
      */
     @Test
-    public void testQuerySpecialPage() {
+    void testQuerySpecialPage() {
         addResponse("mockQuerySpecialPage");
 
         List<String> l = wiki.querySpecialPage("Deadendpages", 10);
@@ -182,7 +182,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Tests listing of all pages
      */
     @Test
-    public void testGetAllPages() {
+    void testGetAllPages() {
         addResponse("mockAllPages");
 
         List<String> l = wiki.allPages(null, false, false, 3, NS.MAIN);
@@ -198,7 +198,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Tests page searching
      */
     @Test
-    public void testSearch() {
+    void testSearch() {
         addResponse("mockSearch");
 
         List<String> l = wiki.search("GitHub", 5, NS.MAIN);
@@ -214,7 +214,7 @@ public class MockQueryTests extends BaseMockTemplate {
      * Tests fetching of shared duplicate files
      */
     @Test
-    public void testGetSharedDuplicateOf() {
+    void testGetSharedDuplicateOf() {
         addResponse("mockSharedDuplicateFiles");
 
         List<String> l = wiki.getSharedDuplicatesOf("File:Test.jpg");

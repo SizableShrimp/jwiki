@@ -14,12 +14,12 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Fastily
  */
-public class ActionTests extends BaseMockTemplate {
+class ActionTests extends BaseMockTemplate {
     /**
      * Sanity check to make sure the mock Wiki object is properly initialized.
      */
     @Test
-    public void testInitializationForSanity() {
+    void testInitializationForSanity() {
         assertEquals("File:Test.jpg", wiki.convertIfNotInNS("Test.jpg", NS.FILE));
 
         try {
@@ -36,7 +36,7 @@ public class ActionTests extends BaseMockTemplate {
      * Test move
      */
     @Test
-    public void testMove() {
+    void testMove() {
         addResponse("mockMovePage");
         assertTrue(wiki.move("User:Example/12345678", "User:Example/1", true, true, true, "This is a test").isSuccess());
     }
@@ -45,7 +45,7 @@ public class ActionTests extends BaseMockTemplate {
      * Test editing
      */
     @Test
-    public void testEdit() {
+    void testEdit() {
         addResponse("mockSuccessEdit");
         assertTrue(wiki.edit("Wikipedia:Sandbox", "Hello, World!", "This is a test").isSuccess());
     }
@@ -54,7 +54,7 @@ public class ActionTests extends BaseMockTemplate {
      * Tests prepending and appending text via edit.
      */
     @Test
-    public void testAddText() {
+    void testAddText() {
         addResponse("mockSuccessEdit");
         addResponse("mockSuccessEdit");
         assertTrue(wiki.addText("Wikipedia:Sandbox", "Appending text!", "test", true).isSuccess());
@@ -65,7 +65,7 @@ public class ActionTests extends BaseMockTemplate {
      * Tests uploading of files
      */
     @Test
-    public void testUpload() {
+    void testUpload() {
         addResponse("mockChunkedUpload");
         addResponse("mockFileUnstash");
 
@@ -80,7 +80,7 @@ public class ActionTests extends BaseMockTemplate {
      * Tests upload by url functionality.
      */
     @Test
-    public void testUploadByUrl() {
+    void testUploadByUrl() {
         addResponse("mockUploadByUrl");
 
         try {
@@ -94,7 +94,7 @@ public class ActionTests extends BaseMockTemplate {
      * Tests purging of pages
      */
     @Test
-    public void testPurge() {
+    void testPurge() {
         addResponse("mockPagePurge");
         wiki.purge("Foo", "Test", "Wikipedia:Sandbox");
     }

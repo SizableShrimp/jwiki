@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Fastily
  */
-public class TPTests {
+class TPTests {
     /**
      * The Wiki object to use for this test set.
      */
@@ -28,7 +28,7 @@ public class TPTests {
      * Test parsePage in WParse
      */
     @Test
-    public void testParsePage() {
+    void testParsePage() {
         WikiText wt = WParser.parsePage(wiki, "User:Fastily/Sandbox/TPTest1");
 
         // Test getTemplates
@@ -52,7 +52,7 @@ public class TPTests {
      * Test parseText in WParse
      */
     @Test
-    public void testParseText() {
+    void testParseText() {
         WikiText wt = WParser.parseText(wiki, wiki.getPageText("User:Fastily/Sandbox/TPTest2"));
         List<WTemplate> wtl = wt.getTemplates();
         assertEquals(1, wtl.size());
@@ -76,7 +76,7 @@ public class TPTests {
      * Tests parseText with comments in strange locations
      */
     @Test
-    public void testParseTextWithComments() {
+    void testParseTextWithComments() {
         WikiText wt = WParser.parseText(wiki, wiki.getPageText("User:Fastily/Sandbox/TPTest3"));
         List<WTemplate> wtl = wt.getTemplates();
 
@@ -90,7 +90,7 @@ public class TPTests {
      * Test for WikiText
      */
     @Test
-    public void testWikiText() {
+    void testWikiText() {
         WikiText wt = new WikiText();
         assertTrue(wt.getTemplatesR().isEmpty());
 

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Fastily
  */
-public class MQueryTests {
+class MQueryTests {
     /**
      * The Wiki object to use for this test set.
      */
@@ -27,7 +27,7 @@ public class MQueryTests {
      * Test for listUserRights.
      */
     @Test
-    public void testListUserRights() {
+    void testListUserRights() {
         Map<String, List<String>> result = MQuery.listUserRights(wiki, FL.toSAL("FastilyClone", "Fastily"));
 
         assertTrue(result.containsKey("Fastily"));
@@ -45,7 +45,7 @@ public class MQueryTests {
      * Test for getImageInfo.
      */
     @Test
-    public void testGetImageInfo() {
+    void testGetImageInfo() {
         Map<String, List<ImageInfo>> result = MQuery.getImageInfo(wiki,
                 FL.toSAL("File:FastilyTestCircle1.svg", "File:FastilyTestCircle2.svg"));
 
@@ -71,7 +71,7 @@ public class MQueryTests {
      * Test for getCategoriesOnPage.
      */
     @Test
-    public void testGetCategoriesOnPage() {
+    void testGetCategoriesOnPage() {
         Map<String, List<String>> result = MQuery.getCategoriesOnPage(wiki,
                 FL.toSAL("User:Fastily/Sandbox/Page/2", "User:Fastily/Sandbox/Page/3"));
 
@@ -92,7 +92,7 @@ public class MQueryTests {
      * Test for getCategorySize.
      */
     @Test
-    public void testGetCategorySize() {
+    void testGetCategorySize() {
         Map<String, Integer> result = MQuery.getCategorySize(wiki, FL.toSAL("Category:Fastily Test", "Category:Fastily Test2"));
 
         assertTrue(result.containsKey("Category:Fastily Test"));
@@ -106,7 +106,7 @@ public class MQueryTests {
      * Test for getPageText.
      */
     @Test
-    public void testGetPageText() {
+    void testGetPageText() {
         Map<String, String> result = MQuery.getPageText(wiki, FL.toSAL("User:Fastily/Sandbox/HelloWorld", "Category:Fastily Test"));
 
         assertTrue(result.containsKey("User:Fastily/Sandbox/HelloWorld"));
@@ -120,7 +120,7 @@ public class MQueryTests {
      * Tests resolving of redirects
      */
     @Test
-    public void testResolveRedirects() {
+    void testResolveRedirects() {
         Map<String, String> result = MQuery.resolveRedirects(wiki,
                 FL.toSAL("User:Fastily/Sandbox/Redirect1", "User:Fastily/Sandbox/Redirect2", "User:Fastily/Sandbox/Redirect3"));
 
@@ -133,7 +133,8 @@ public class MQueryTests {
      * Verifies that passing {@code null} as an element in a {@code titles} Collection is not permitted.
      */
     @Test
-    public void testNullTitles() {
-        assertThrows(IllegalArgumentException.class, () -> MQuery.exists(wiki, FL.toSAL("", null, "test")));
+    void testNullTitles() {
+        List<String> test = FL.toSAL("", null, "test");
+        assertThrows(IllegalArgumentException.class, () -> MQuery.exists(wiki, test));
     }
 }
