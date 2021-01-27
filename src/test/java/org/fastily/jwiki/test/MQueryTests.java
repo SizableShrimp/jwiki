@@ -7,8 +7,8 @@ import org.fastily.jwiki.util.FL;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,12 +28,12 @@ public class MQueryTests {
      */
     @Test
     public void testListUserRights() {
-        HashMap<String, ArrayList<String>> result = MQuery.listUserRights(wiki, FL.toSAL("FastilyClone", "Fastily"));
+        Map<String, List<String>> result = MQuery.listUserRights(wiki, FL.toSAL("FastilyClone", "Fastily"));
 
         assertTrue(result.containsKey("Fastily"));
         assertTrue(result.containsKey("FastilyClone"));
 
-        ArrayList<String> subResult = result.get("Fastily");
+        List<String> subResult = result.get("Fastily");
         assertTrue(subResult.contains("sysop"));
         assertTrue(subResult.contains("autoconfirmed"));
 
@@ -46,7 +46,7 @@ public class MQueryTests {
      */
     @Test
     public void testGetImageInfo() {
-        HashMap<String, ArrayList<ImageInfo>> result = MQuery.getImageInfo(wiki,
+        Map<String, List<ImageInfo>> result = MQuery.getImageInfo(wiki,
                 FL.toSAL("File:FastilyTestCircle1.svg", "File:FastilyTestCircle2.svg"));
 
         assertTrue(result.containsKey("File:FastilyTestCircle1.svg"));
@@ -72,13 +72,13 @@ public class MQueryTests {
      */
     @Test
     public void testGetCategoriesOnPage() {
-        HashMap<String, ArrayList<String>> result = MQuery.getCategoriesOnPage(wiki,
+        Map<String, List<String>> result = MQuery.getCategoriesOnPage(wiki,
                 FL.toSAL("User:Fastily/Sandbox/Page/2", "User:Fastily/Sandbox/Page/3"));
 
         assertTrue(result.containsKey("User:Fastily/Sandbox/Page/2"));
         assertTrue(result.containsKey("User:Fastily/Sandbox/Page/3"));
 
-        ArrayList<String> subResult = result.get("User:Fastily/Sandbox/Page/2");
+        List<String> subResult = result.get("User:Fastily/Sandbox/Page/2");
         assertEquals(2, subResult.size());
         assertTrue(subResult.contains("Category:Fastily Test"));
         assertTrue(subResult.contains("Category:Fastily Test2"));
@@ -93,7 +93,7 @@ public class MQueryTests {
      */
     @Test
     public void testGetCategorySize() {
-        HashMap<String, Integer> result = MQuery.getCategorySize(wiki, FL.toSAL("Category:Fastily Test", "Category:Fastily Test2"));
+        Map<String, Integer> result = MQuery.getCategorySize(wiki, FL.toSAL("Category:Fastily Test", "Category:Fastily Test2"));
 
         assertTrue(result.containsKey("Category:Fastily Test"));
         assertTrue(result.containsKey("Category:Fastily Test2"));
@@ -107,7 +107,7 @@ public class MQueryTests {
      */
     @Test
     public void testGetPageText() {
-        HashMap<String, String> result = MQuery.getPageText(wiki, FL.toSAL("User:Fastily/Sandbox/HelloWorld", "Category:Fastily Test"));
+        Map<String, String> result = MQuery.getPageText(wiki, FL.toSAL("User:Fastily/Sandbox/HelloWorld", "Category:Fastily Test"));
 
         assertTrue(result.containsKey("User:Fastily/Sandbox/HelloWorld"));
         assertTrue(result.containsKey("Category:Fastily Test"));
@@ -121,7 +121,7 @@ public class MQueryTests {
      */
     @Test
     public void testResolveRedirects() {
-        HashMap<String, String> result = MQuery.resolveRedirects(wiki,
+        Map<String, String> result = MQuery.resolveRedirects(wiki,
                 FL.toSAL("User:Fastily/Sandbox/Redirect1", "User:Fastily/Sandbox/Redirect2", "User:Fastily/Sandbox/Redirect3"));
 
         assertEquals("User:Fastily/Sandbox/RedirectTarget", result.get("User:Fastily/Sandbox/Redirect1"));

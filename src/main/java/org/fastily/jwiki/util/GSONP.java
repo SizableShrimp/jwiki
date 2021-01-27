@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -52,27 +53,27 @@ public class GSONP {
     }
 
     /**
-     * Convert a JsonObject of JsonObject to an ArrayList of JsonObject.
+     * Convert a JsonObject of JsonObject to a List of JsonObject.
      *
      * @param input A JsonObject containing only other JsonObject objects.
-     * @return An ArrayList of JsonObject derived from {@code input}.
+     * @return A List of JsonObject derived from {@code input}.
      */
-    public static ArrayList<JsonObject> getJOofJO(JsonObject input) {
-        return FL.toAL(input.entrySet().stream().map(e -> e.getValue().getAsJsonObject()));
+    public static List<JsonObject> getJOofJO(JsonObject input) {
+        return input.entrySet().stream().map(e -> e.getValue().getAsJsonObject()).collect(Collectors.toList());
     }
 
     /**
-     * Convert a JsonArray of JsonObject to an ArrayList of JsonObject.
+     * Convert a JsonArray of JsonObject to a List of JsonObject.
      *
      * @param input A JsonArray of JsonObject.
-     * @return An ArrayList of JsonObject derived from {@code input}.
+     * @return A List of JsonObject derived from {@code input}.
      */
-    public static ArrayList<JsonObject> getJAofJO(JsonArray input) {
+    public static List<JsonObject> getJAofJO(JsonArray input) {
         try {
-            return FL.toAL(FL.streamFrom(input).map(JsonElement::getAsJsonObject));
+            return FL.streamFrom(input).map(JsonElement::getAsJsonObject).collect(Collectors.toList());
         } catch (Throwable e) {
             LOGGER.error("Error when converting array of JSON objects to list", e);
-            return null;
+            return new ArrayList<>();
         }
     }
 
@@ -82,23 +83,23 @@ public class GSONP {
      *
      * @param input The source JsonObject.
      * @param key Points to a JsonArray of JsonObject
-     * @return An ArrayList of JsonObject derived from {@code input}, or an empty ArrayList if a JsonArray associated
+     * @return A List of JsonObject derived from {@code input}, or an empty List if a JsonArray associated
      * with {@code key} could not be found in {@code input}
      */
-    public static ArrayList<JsonObject> getJAofJO(JsonObject input, String key) {
+    public static List<JsonObject> getJAofJO(JsonObject input, String key) {
         JsonArray ja = input.getAsJsonArray(key);
         return ja != null ? getJAofJO(input.getAsJsonArray(key)) : new ArrayList<>();
     }
 
     /**
-     * Extract a pair of String values from each JsonObject in an ArrayList of JsonObject
+     * Extract a pair of String values from each JsonObject in an List of JsonObject
      *
      * @param input The source List
      * @param kk Points to each key in to be used in the resulting Map.
      * @param vk Points to each value in to be used in the resulting Map.
      * @return The pairs of String values.
      */
-    public static HashMap<String, String> pairOff(ArrayList<JsonObject> input, String kk, String vk) {
+    public static Map<String, String> pairOff(List<JsonObject> input, String kk, String vk) {
         return new HashMap<>(input.stream().collect(Collectors.toMap(e -> getStr(e, kk), e -> getStr(e, vk))));
     }
 
@@ -160,7 +161,8 @@ public class GSONP {
         else if (keys.size() == 1)
             return input.getAsJsonArray(keys.get(0));
 
-        return getNestedJO(input, keys.subList(0, keys.size() - 1)).getAsJsonArray(keys.get(keys.size() - 1));
+        JsonObject nested = getNestedJO(input, keys.subList(0, keys.size() - 1));
+        return nested == null ? null : nested.getAsJsonArray(keys.get(keys.size() - 1));
     }
 
     /**
@@ -179,12 +181,12 @@ public class GSONP {
     }
 
     /**
-     * Get a JsonArray of String objects as an ArrayList of String objects.
+     * Get a JsonArray of String objects as a List of String objects.
      *
      * @param ja The source JsonArray
-     * @return The ArrayList derived from {@code ja}
+     * @return The List derived from {@code ja}
      */
-    public static ArrayList<String> jaOfStrToAL(JsonArray ja) {
-        return FL.toAL(FL.streamFrom(ja).map(JsonElement::getAsString));
+    public static List<String> jaOfStrToAL(JsonArray ja) {
+        return FL.streamFrom(ja).map(JsonElement::getAsString).collect(Collectors.toList());
     }
 }

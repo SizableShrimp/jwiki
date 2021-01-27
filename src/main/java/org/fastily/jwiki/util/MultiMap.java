@@ -1,58 +1,55 @@
 package org.fastily.jwiki.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
- * A HashMap which allows multiple values for each key. Duplicate values are permitted.
+ * A Map which allows multiple values for each key. Duplicate values are permitted.
  *
  * @param <K> The type of the key
- * @param <V> The type of the values, which will be stored in an ArrayList.
+ * @param <V> The type of the values, which will be stored in a List.
  * @author Fastily
  */
-public class MultiMap<K, V> {
-    /**
-     * The backing structure for this MapList. This is public because a getter would just return a reference to this
-     * anyways.
-     */
-    public final HashMap<K, ArrayList<V>> l = new HashMap<>();
+public class MultiMap<K, V> extends HashMap<K, List<V>> {
+    private static final long serialVersionUID = 2009710673163769278L;
 
     /**
-     * Constructor, creates an empty MapList.
+     * Constructor, creates an empty MultiMap.
      */
     public MultiMap() {
-
+        super();
     }
 
     /**
-     * Creates a new empty ArrayList for {@code k} in this MapList if it did not exist already. Does nothing otherwise.
-     *
-     * @param k The key to create a new entry for, if applicable.
-     */
-    public void touch(K k) {
-        if (!l.containsKey(k))
-            l.put(k, new ArrayList<>());
-    }
-
-    /**
-     * Adds a key-value pair to this MapList.
+     * Adds a key-value pair to this MultiMap.
      *
      * @param k The key to add
-     * @param v The value to add
+     * @param v The value to add to the list
      */
-    public void put(K k, V v) {
-        touch(k);
-        l.get(k).add(v);
+    public List<V> putValue(K k, V v) {
+        List<V> l = getOrMake(k);
+        l.add(v);
+        return l;
     }
 
     /**
-     * Merges an ArrayList of V objects into the value set for a given key.
+     * Merges a {@link List} of V objects into the existing value set for a given key.
      *
-     * @param k The key to use
-     * @param vl The list of values to merge.
+     * @param k the key to add
+     * @param v the list of {@link V} objects to merge
+     * @return the value in the map
      */
-    public void put(K k, ArrayList<V> vl) {
-        touch(k);
-        l.get(k).addAll(vl);
+    public List<V> putAll(K k, List<V> v) {
+        List<V> l = getOrMake(k);
+        l.addAll(v);
+        return l;
+    }
+
+    @NotNull
+    private List<V> getOrMake(K k) {
+        return super.computeIfAbsent(k, x -> new ArrayList<>());
     }
 }

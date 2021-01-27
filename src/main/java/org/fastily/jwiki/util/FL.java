@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,85 +27,65 @@ public final class FL {
     }
 
     /**
-     * Collects the elements of a Stream into an ArrayList.
-     *
-     * @param s The target Stream
-     * @param <T1> The resulting ArrayList will be created containing this type.
-     * @return An ArrayList containing the elements of the <code>s</code>
-     */
-    public static <T1> ArrayList<T1> toAL(Stream<T1> s) {
-        return s.collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    /**
-     * Collects the elements of a Stream into a HashSet.
-     *
-     * @param s The target Stream
-     * @param <T1> The resulting HashSet will be created containing this type.
-     * @return A HashSet containing the elements of the <code>s</code>
-     */
-    public static <T1> HashSet<T1> toSet(Stream<T1> s) {
-        return s.collect(Collectors.toCollection(HashSet::new));
-    }
-
-    /**
-     * Creates a HashMap from a Stream. If duplicate keys are encountered, only the latest value will be retained.
+     * Creates a Map from a Stream. If duplicate keys are encountered, only the latest value will be retained.
      *
      * @param s The Stream to reduce into a Map.
      * @param keyMapper The function mapping each element of {@code s} to a key in the resulting Map.
      * @param valueMapper The function mapping each element of {@code s} to a value in the resulting Map.
-     * @param <K> The type of the key in the resulting HashMap.
-     * @param <V> The type of the value in the resulting HashMap.
+     * @param <K> The type of the key in the resulting Map.
+     * @param <V> The type of the value in the resulting Map.
      * @param <T1> The type of Object in the Stream.
-     * @return A HashMap, as specified.
+     * @return A Map, as specified.
      */
-    public static <K, V, T1> HashMap<K, V> toHM(Stream<T1> s, Function<T1, K> keyMapper, Function<T1, V> valueMapper) {
-        return new HashMap<>(s.collect(Collectors.toMap(keyMapper, valueMapper, (oVal, nVal) -> nVal)));
+    public static <K, V, T1> Map<K, V> toHM(Stream<T1> s, Function<T1, K> keyMapper, Function<T1, V> valueMapper) {
+        return s.collect(Collectors.toMap(keyMapper, valueMapper, (oVal, nVal) -> nVal));
     }
 
     /**
-     * Shortcut to turn an array of String objects into an ArrayList of String objects.
+     * Shortcut to turn an array of String objects into a List of String objects.
      *
-     * @param strings The list of Strings to put into the resulting ArrayList.
-     * @return The array as an ArrayList
+     * @param strings The list of Strings to put into the resulting List.
+     * @return The array as a List
      */
-    public static ArrayList<String> toSAL(String... strings) {
+    public static List<String> toSAL(String... strings) {
         return new ArrayList<>(Arrays.asList(strings));
     }
 
     /**
-     * Shortcut to turn an array of String objects into a HashSet of String objects.
+     * Shortcut to turn an array of String objects into a Set of String objects.
      *
-     * @param strings The list of Strings to put into the resulting HashSet.
-     * @return The array as a HashSet
+     * @param strings The list of Strings to put into the resulting Set.
+     * @return The array as a Set
      */
-    public static HashSet<String> toSHS(String... strings) {
+    public static Set<String> toSHS(String... strings) {
         return new HashSet<>(Arrays.asList(strings));
     }
 
     /**
-     * Extracts each key-value pair from a Map and return the pairs as an ArrayList of Tuple objects.
+     * Extracts each key-value pair from a Map and return the pairs as a List of Tuple objects.
      *
      * @param <T1> The key type of the Map
      * @param <T2> The value type of the Map
      * @param h The Map to work with
-     * @return An ArrayList of Tuples extracted from <code>h</code>.
+     * @return A List of Tuples extracted from <code>h</code>.
      */
-    public static <T1, T2> ArrayList<Tuple<T1, T2>> mapToList(Map<T1, T2> h) {
-        return toAL(h.entrySet().stream().map(e -> new Tuple<>(e.getKey(), e.getValue())));
+    public static <T1, T2> List<Tuple<T1, T2>> mapToList(Map<T1, T2> h) {
+        return h.entrySet().stream().map(e -> new Tuple<>(e.getKey(), e.getValue())).collect(Collectors.toList());
     }
 
     /**
-     * Creates a HashMap with String keys and values. Pass in each pair and value (in that order) into <code>sl</code>. This will be one pair entered into resulting HashMap.
+     * Creates a Map with String keys and values. Pass in each pair and value (in that order) into <code>sl</code>.
+     * This will be one pair entered into the resulting Map.
      *
-     * @param sl The list of elements to turn into a HashMap.
-     * @return The resulting HashMap, or null if you specified an odd number of elements.
+     * @param sl The list of elements to turn into a Map
+     * @throws IllegalArgumentException if the arguments are an odd size
+     * @return The resulting Map
      */
-    public static HashMap<String, String> pMap(String... sl) {
+    public static Map<String, String> pMap(String... sl) {
         if (sl.length % 2 == 1)
             throw new IllegalArgumentException("pMap() cannot work with an odd number of entries!");
 
-        HashMap<String, String> l = new HashMap<>();
+        Map<String, String> l = new HashMap<>();
         for (int i = 0; i < sl.length; i += 2)
             l.put(sl[i], sl[i + 1]);
         return l;
@@ -138,6 +120,11 @@ public final class FL {
      * @return True if there are no null elements in the Collection.
      */
     public static <T> boolean containsNull(Collection<T> l) {
-        return l.stream().anyMatch(o -> o == null);
+        for (T t : l) {
+            if (t == null) {
+                return true;
+            }
+        }
+        return false;
     }
 }

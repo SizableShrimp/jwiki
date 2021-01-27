@@ -12,14 +12,15 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.fastily.jwiki.dwrap.TokenizedResponse;
-import org.fastily.jwiki.util.FL;
 
 import java.io.IOException;
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Functions which perform {@code GET} and {@code POST} requests to the MediaWiki api and returns Response objects in a
@@ -71,7 +72,7 @@ class ApiClient {
 
         JwikiCookieJar cl = (JwikiCookieJar) client.cookieJar();
 
-        HashMap<String, String> l = new HashMap<>();
+        Map<String, String> l = new HashMap<>();
         cl.cj.get(from.conf.hostname).forEach((k, v) -> {
             if (k.contains("centralauth"))
                 l.put(k, v);
@@ -86,7 +87,7 @@ class ApiClient {
      * @param params Any URL parameters (not URL-encoded).
      * @return A new Request.Builder with default values needed to hit MediaWiki API endpoints.
      */
-    private Request.Builder startReq(HashMap<String, String> params) {
+    private Request.Builder startReq(Map<String, String> params) {
         HttpUrl.Builder hb = wiki.conf.baseURL.newBuilder();
         params.forEach(hb::addQueryParameter);
 
@@ -100,7 +101,7 @@ class ApiClient {
      * @return A Response object with the result of this Request.
      * @throws IOException Network error
      */
-    protected Response basicGET(HashMap<String, String> params) throws IOException {
+    protected Response basicGET(Map<String, String> params) throws IOException {
         return client.newCall(startReq(params).get().build()).execute();
     }
 
@@ -111,7 +112,7 @@ class ApiClient {
      * @return A {@link TokenizedResponse} object with the result of this Request.
      * @throws IOException Network error
      */
-    protected TokenizedResponse basicTokenizedGET(HashMap<String, String> params) throws IOException {
+    protected TokenizedResponse basicTokenizedGET(Map<String, String> params) throws IOException {
         TokenizedResponse response = new TokenizedResponse(this.basicGET(params));
 
         if (isBadToken(response)) {
@@ -131,7 +132,7 @@ class ApiClient {
      * @return A Response object with the result of this Request.
      * @throws IOException Network error
      */
-    protected Response basicPOST(HashMap<String, String> params, HashMap<String, String> form) throws IOException {
+    protected Response basicPOST(Map<String, String> params, Map<String, String> form) throws IOException {
         FormBody.Builder fb = new FormBody.Builder();
         form.forEach(fb::add);
 
@@ -146,7 +147,7 @@ class ApiClient {
      * @return A {@link TokenizedResponse} object with the result of this Request.
      * @throws IOException Network error
      */
-    protected TokenizedResponse basicTokenizedPOST(HashMap<String, String> params, HashMap<String, String> form) throws IOException {
+    protected TokenizedResponse basicTokenizedPOST(Map<String, String> params, Map<String, String> form) throws IOException {
         TokenizedResponse response = new TokenizedResponse(this.basicPOST(params, form));
 
         if (isBadToken(response)) {
@@ -168,7 +169,7 @@ class ApiClient {
      * @return A Response with the results of this {@code POST}.
      * @throws IOException Network error
      */
-    protected Response multiPartFilePOST(HashMap<String, String> params, HashMap<String, String> form, String fn, byte[] chunk)
+    protected Response multiPartFilePOST(Map<String, String> params, Map<String, String> form, String fn, byte[] chunk)
             throws IOException {
         MultipartBody.Builder mpb = new MultipartBody.Builder().setType(MultipartBody.FORM);
         form.forEach(mpb::addFormDataPart);
@@ -198,9 +199,9 @@ class ApiClient {
      */
     private static class JwikiCookieJar implements CookieJar {
         /**
-         * Internal HashMap tracking cookies. Legend - [ domain : [ key : value ] ].
+         * Internal Map tracking cookies. Legend - [ domain : [ key : value ] ].
          */
-        private final HashMap<String, HashMap<String, String>> cj = new HashMap<>();
+        private final Map<String, Map<String, String>> cj = new HashMap<>();
 
         /**
          * Constructor, create a new JwikiCookieJar
@@ -215,10 +216,8 @@ class ApiClient {
         @Override
         public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
             String host = url.host();
-            if (!cj.containsKey(host))
-                cj.put(host, new HashMap<>());
 
-            HashMap<String, String> m = cj.get(host);
+            Map<String, String> m = cj.computeIfAbsent(host, k -> new HashMap<>());
             for (Cookie c : cookies)
                 m.put(c.name(), c.value());
         }
@@ -229,9 +228,13 @@ class ApiClient {
         @Override
         public List<Cookie> loadForRequest(HttpUrl url) {
             String host = url.host();
-            return !cj.containsKey(host) ? new ArrayList<>()
-                    : FL.toAL(cj.get(host).entrySet().stream()
-                    .map(e -> new Cookie.Builder().name(e.getKey()).value(e.getValue()).domain(host).build()));
+            if (cj.containsKey(host)) {
+                return cj.get(host).entrySet().stream()
+                        .map(e -> new Cookie.Builder().name(e.getKey()).value(e.getValue()).domain(host).build())
+                        .collect(Collectors.toList());
+            } else {
+                return new ArrayList<>();
+            }
         }
     }
 }

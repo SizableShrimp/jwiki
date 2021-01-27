@@ -8,7 +8,7 @@ import org.fastily.jwiki.util.Tuple;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,7 +25,7 @@ public class MockQueryTests extends BaseMockTemplate {
     @Test
     public void testGetRandomPages() {
         addResponse("mockRandom");
-        ArrayList<String> l = wiki.getRandomPages(3, NS.FILE, NS.MAIN);
+        List<String> l = wiki.getRandomPages(3, NS.FILE, NS.MAIN);
 
         assertEquals(3, l.size());
         assertEquals(3, new HashSet<>(l).size());
@@ -38,7 +38,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testGlobalUsage() {
         addResponse("mockGlobalUsage");
 
-        ArrayList<Tuple<String, String>> l = wiki.globalUsage("File:Example.jpg");
+        List<Tuple<String, String>> l = wiki.globalUsage("File:Example.jpg");
 
         assertFalse(l.isEmpty());
 
@@ -59,7 +59,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testProtectedTitles() {
         addResponse("mockProtectedTitles");
 
-        ArrayList<ProtectedTitleEntry> l = wiki.getProtectedTitles(3, true);
+        List<ProtectedTitleEntry> l = wiki.getProtectedTitles(3, true);
 
         assertFalse(l.isEmpty());
 
@@ -89,7 +89,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testRecentChanges() {
         addResponse("mockRecentChanges");
 
-        ArrayList<RCEntry> l = wiki.getRecentChanges(Instant.parse("2017-12-31T02:06:08Z"), Instant.parse("2017-12-31T02:06:09Z"));
+        List<RCEntry> l = wiki.getRecentChanges(Instant.parse("2017-12-31T02:06:08Z"), Instant.parse("2017-12-31T02:06:09Z"));
 
         assertFalse(l.isEmpty());
 
@@ -119,7 +119,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testGetLogs() {
         // Test 1
         addResponse("mockLogEntry1");
-        ArrayList<LogEntry> l = wiki.getLogs("File:Example.jpg", "Fastily", "delete", -1);
+        List<LogEntry> l = wiki.getLogs("File:Example.jpg", "Fastily", "delete", -1);
 
         assertEquals(3, l.size());
 
@@ -169,7 +169,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testQuerySpecialPage() {
         addResponse("mockQuerySpecialPage");
 
-        ArrayList<String> l = wiki.querySpecialPage("Deadendpages", 10);
+        List<String> l = wiki.querySpecialPage("Deadendpages", 10);
 
         assertEquals(3, l.size());
 
@@ -185,7 +185,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testGetAllPages() {
         addResponse("mockAllPages");
 
-        ArrayList<String> l = wiki.allPages(null, false, false, 3, NS.MAIN);
+        List<String> l = wiki.allPages(null, false, false, 3, NS.MAIN);
 
         assertEquals(3, l.size());
 
@@ -201,7 +201,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testSearch() {
         addResponse("mockSearch");
 
-        ArrayList<String> l = wiki.search("GitHub", 5, NS.MAIN);
+        List<String> l = wiki.search("GitHub", 5, NS.MAIN);
 
         assertEquals(5, l.size());
 
@@ -217,7 +217,7 @@ public class MockQueryTests extends BaseMockTemplate {
     public void testGetSharedDuplicateOf() {
         addResponse("mockSharedDuplicateFiles");
 
-        ArrayList<String> l = wiki.getSharedDuplicatesOf("File:Test.jpg");
+        List<String> l = wiki.getSharedDuplicatesOf("File:Test.jpg");
 
         assertEquals(1, l.size());
         assertTrue(l.contains("File:TestTest.jpg"));

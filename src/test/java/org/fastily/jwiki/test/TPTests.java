@@ -4,11 +4,11 @@ import org.fastily.jwiki.core.WParser;
 import org.fastily.jwiki.core.WParser.WTemplate;
 import org.fastily.jwiki.core.WParser.WikiText;
 import org.fastily.jwiki.core.Wiki;
-import org.fastily.jwiki.util.FL;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,14 +32,14 @@ public class TPTests {
         WikiText wt = WParser.parsePage(wiki, "User:Fastily/Sandbox/TPTest1");
 
         // Test getTemplates
-        HashSet<String> l = FL.toSet(wt.getTemplates().stream().map(t -> t.title));
+        Set<String> l = wt.getTemplates().stream().map(t1 -> t1.title).collect(Collectors.toSet());
         assertTrue(l.contains("Tl"));
         assertTrue(l.contains("int:license-header"));
         assertTrue(l.contains("Ombox"));
         assertEquals(3, l.size());
 
         // Test recursive getTemplates
-        l = FL.toSet(wt.getTemplatesR().stream().map(t -> t.title));
+        l = wt.getTemplatesR().stream().map(t -> t.title).collect(Collectors.toSet());
         assertTrue(l.contains("Tlx"));
         assertTrue(l.contains("Ombox"));
         assertTrue(l.contains("Tl"));
@@ -54,7 +54,7 @@ public class TPTests {
     @Test
     public void testParseText() {
         WikiText wt = WParser.parseText(wiki, wiki.getPageText("User:Fastily/Sandbox/TPTest2"));
-        ArrayList<WTemplate> wtl = wt.getTemplates();
+        List<WTemplate> wtl = wt.getTemplates();
         assertEquals(1, wtl.size());
 
         WTemplate t = wtl.get(0);
@@ -78,7 +78,7 @@ public class TPTests {
     @Test
     public void testParseTextWithComments() {
         WikiText wt = WParser.parseText(wiki, wiki.getPageText("User:Fastily/Sandbox/TPTest3"));
-        ArrayList<WTemplate> wtl = wt.getTemplates();
+        List<WTemplate> wtl = wt.getTemplates();
 
         WTemplate t = wtl.get(0);
         assertEquals("Tl", t.title);
@@ -103,7 +103,7 @@ public class TPTests {
 
         assertEquals("foo{{Template:test}}", wt.toString());
 
-        ArrayList<WTemplate> wtl = wt.getTemplates();
+        List<WTemplate> wtl = wt.getTemplates();
         assertEquals(1, wtl.size());
         assertEquals("Template:test", wtl.get(0).title);
 

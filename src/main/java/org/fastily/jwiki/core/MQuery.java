@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Perform multi-title queries. Use of these methods is intended for
@@ -28,14 +31,12 @@ public final class MQuery {
     /**
      * The group {@code prop} query (multiple titles query) maximum
      */
-    private static final int groupQueryMax = 50;
+    private static final int MAX_GROUP_QUERY = 50;
 
     /**
      * Constructors disallowed
      */
-    private MQuery() {
-
-    }
+    private MQuery() {}
 
     /**
      * Generic page property ({@code prop}) fetching. This implementation fetches *all* available properties. Use this
@@ -48,14 +49,13 @@ public final class MQuery {
      * @param elemArrKey The key for each JsonArray for each title the resulting set
      * @return A Map where the key is the title of the page, and the value is the List of properties fetched.
      */
-    private static MultiMap<String, JsonObject> getContProp(Wiki wiki, Collection<String> titles, QTemplate qut,
-                                                            HashMap<String, String> pl, String elemArrKey) {
+    private static MultiMap<String, JsonObject> getContProp(Wiki wiki, Collection<String> titles, QTemplate qut, Map<String, String> pl, String elemArrKey) {
         MultiMap<String, JsonObject> l = new MultiMap<>();
 
         if (FL.containsNull(titles))
             throw new IllegalArgumentException("null is not an acceptable title to query with");
 
-        GroupQueue<String> gq = new GroupQueue<>(titles, groupQueryMax);
+        GroupQueue<String> gq = new GroupQueue<>(titles, MAX_GROUP_QUERY);
 
         while (gq.has()) {
             WQuery wq = new WQuery(wiki, qut).set("titles", gq.poll());
@@ -64,9 +64,8 @@ public final class MQuery {
 
             while (wq.has()) {
                 wq.next().propComp("title", elemArrKey).forEach((k, v) -> {
-                    l.touch(k);
                     if (v != null)
-                        l.put(k, GSONP.getJAofJO(v.getAsJsonArray()));
+                        l.putAll(k, GSONP.getJAofJO(v.getAsJsonArray()));
                 });
             }
         }
@@ -83,14 +82,13 @@ public final class MQuery {
      * @param eKey The value key to get from each page element. If this cannot be found, then it is set to null.
      * @return The {@code title} of each page as the key, and the value of the associated {@code eKey}.
      */
-    private static HashMap<String, JsonElement> getNoContProp(Wiki wiki, Collection<String> titles, QTemplate qut,
-                                                              HashMap<String, String> pl, String eKey) {
-        HashMap<String, JsonElement> m = new HashMap<>();
+    private static Map<String, JsonElement> getNoContProp(Wiki wiki, Collection<String> titles, QTemplate qut, Map<String, String> pl, String eKey) {
+        Map<String, JsonElement> m = new HashMap<>();
 
         if (FL.containsNull(titles))
             throw new IllegalArgumentException("null is not an acceptable title to query with");
 
-        GroupQueue<String> gq = new GroupQueue<>(titles, groupQueryMax);
+        GroupQueue<String> gq = new GroupQueue<>(titles, MAX_GROUP_QUERY);
         while (gq.has()) {
             WQuery wq = new WQuery(wiki, qut).set("titles", gq.poll());
             if (pl != null)
@@ -110,16 +108,15 @@ public final class MQuery {
      * @param pl Additional parameters to pass to each created WQuery, set null to disable.
      * @param tQKey The variable name to use for each set of 50 {@code titles} in the url passed to the server.
      * @param aKey The key pointing to the JsonArray of JsonObject in the server's Response.
-     * @return An ArrayList of JsonObject collected from the server Response(s).
+     * @return A List of JsonObject collected from the server Response(s).
      */
-    private static ArrayList<JsonObject> getNoContList(Wiki wiki, Collection<String> titles, QTemplate qut, HashMap<String, String> pl,
-                                                       String tQKey, String aKey) {
-        ArrayList<JsonObject> l = new ArrayList<>();
+    private static List<JsonObject> getNoContList(Wiki wiki, Collection<String> titles, QTemplate qut, Map<String, String> pl, String tQKey, String aKey) {
+        List<JsonObject> l = new ArrayList<>();
 
         if (FL.containsNull(titles))
             throw new IllegalArgumentException("null is not an acceptable title to query with");
 
-        GroupQueue<String> gq = new GroupQueue<>(titles, groupQueryMax);
+        GroupQueue<String> gq = new GroupQueue<>(titles, MAX_GROUP_QUERY);
         while (gq.has()) {
             WQuery wq = new WQuery(wiki, qut).set(tQKey, gq.poll());
             if (pl != null)
@@ -132,43 +129,42 @@ public final class MQuery {
     }
 
     /**
-     * Retrieve one String value from each JsonObject ArrayList for each pair in a MapList.
+     * Retrieve one String value from each JsonObject List for each pair in a MapList.
      *
      * @param m The MapList to work with
      * @param elemKey The key pointing to String to get in each JsonObject.
      * @return Each title, and the values that were found for it.
      */
-    private static HashMap<String, ArrayList<String>> parsePropToSingle(MultiMap<String, JsonObject> m, String elemKey) {
-        HashMap<String, ArrayList<String>> xl = new HashMap<>();
-        m.l.forEach((k, v) -> xl.put(k, FL.toAL(v.stream().map(e -> GSONP.getStr(e, elemKey)))));
+    private static Map<String, List<String>> parsePropToSingle(MultiMap<String, JsonObject> m, String elemKey) {
+        Map<String, List<String>> xl = new HashMap<>();
+        m.forEach((k, v) -> xl.put(k, v.stream().map(e -> GSONP.getStr(e, elemKey)).collect(Collectors.toList())));
 
         return xl;
     }
 
     /**
-     * Retrieve one String value from each JsonObject ArrayList for each pair in a MapList. Assumes that the key to
+     * Retrieve one String value from each JsonObject List for each pair in a MapList. Assumes that the key to
      * select from each JsonObject is {@code title}.
      *
      * @param m The MapList to work with
      * @return Each title, and the values that were found for it.
      */
-    private static HashMap<String, ArrayList<String>> parsePropToSingle(MultiMap<String, JsonObject> m) {
+    private static Map<String, List<String>> parsePropToSingle(MultiMap<String, JsonObject> m) {
         return parsePropToSingle(m, "title");
     }
 
     /**
-     * Retrieve two String value from each JsonObject ArrayList for each pair in a MapList.
+     * Retrieve two String value from each JsonObject List for each pair in a MapList.
      *
      * @param m The MapList to work with
      * @param elemKey1 The key pointing to the first String to get in each JsonObject.
      * @param elemKey2 The key pointing to the second String to get in each JsonObject.
      * @return Each title, and the values that were found for it.
      */
-    private static HashMap<String, ArrayList<Tuple<String, String>>> parsePropToDouble(MultiMap<String, JsonObject> m, String elemKey1,
+    private static Map<String, List<Tuple<String, String>>> parsePropToDouble(MultiMap<String, JsonObject> m, String elemKey1,
                                                                                        String elemKey2) {
-        HashMap<String, ArrayList<Tuple<String, String>>> xl = new HashMap<>();
-        m.l.forEach(
-                (k, v) -> xl.put(k, FL.toAL(v.stream().map(e -> new Tuple<>(GSONP.getStr(e, elemKey1), GSONP.getStr(e, elemKey2))))));
+        Map<String, List<Tuple<String, String>>> xl = new HashMap<>();
+        m.forEach((k, v) -> xl.put(k, v.stream().map(e -> new Tuple<>(GSONP.getStr(e, elemKey1), GSONP.getStr(e, elemKey2))).collect(Collectors.toList())));
 
         return xl;
     }
@@ -181,8 +177,8 @@ public final class MQuery {
      * @return A Map such that the key is the user and the value a List of the user's rights (or null if the user does
      * not exist)
      */
-    public static HashMap<String, ArrayList<String>> listUserRights(Wiki wiki, Collection<String> users) {
-        HashMap<String, ArrayList<String>> l = new HashMap<>();
+    public static Map<String, List<String>> listUserRights(Wiki wiki, Collection<String> users) {
+        Map<String, List<String>> l = new HashMap<>();
         getNoContList(wiki, users, WQuery.USERRIGHTS, null, "ususers", "users")
                 .forEach(jo -> l.put(GSONP.getStr(jo, "name"), jo.has("groups") ? GSONP.jaOfStrToAL(jo.getAsJsonArray("groups")) : null));
 
@@ -196,10 +192,10 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A map with titles keyed to respective lists of ImageInfo.
      */
-    public static HashMap<String, ArrayList<ImageInfo>> getImageInfo(Wiki wiki, Collection<String> titles) {
-        HashMap<String, ArrayList<ImageInfo>> l = new HashMap<>();
-        getContProp(wiki, titles, WQuery.IMAGEINFO, null, "imageinfo").l
-                .forEach((k, v) -> l.put(k, FL.toAL(v.stream().map(jo -> GSONP.gson.fromJson(jo, ImageInfo.class)))));
+    public static Map<String, List<ImageInfo>> getImageInfo(Wiki wiki, Collection<String> titles) {
+        Map<String, List<ImageInfo>> l = new HashMap<>();
+        getContProp(wiki, titles, WQuery.IMAGEINFO, null, "imageinfo")
+                .forEach((k, v) -> l.put(k, v.stream().map(jo -> GSONP.gson.fromJson(jo, ImageInfo.class)).collect(Collectors.toList())));
 
         // MediaWiki imageinfo is not a well-behaved module
         l.forEach((k, v) -> Collections.sort(v));
@@ -214,7 +210,7 @@ public final class MQuery {
      * @param titles The titles to query.
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getCategoriesOnPage(Wiki wiki, Collection<String> titles) {
+    public static Map<String, List<String>> getCategoriesOnPage(Wiki wiki, Collection<String> titles) {
         return parsePropToSingle(getContProp(wiki, titles, WQuery.PAGECATEGORIES, null, "categories"));
     }
 
@@ -226,8 +222,8 @@ public final class MQuery {
      * @return A list of results keyed by title. Value returned will be -1 if Category entered was empty <b>and</b>
      * non-existent.
      */
-    public static HashMap<String, Integer> getCategorySize(Wiki wiki, Collection<String> titles) {
-        HashMap<String, Integer> l = new HashMap<>();
+    public static Map<String, Integer> getCategorySize(Wiki wiki, Collection<String> titles) {
+        Map<String, Integer> l = new HashMap<>();
         getNoContProp(wiki, titles, WQuery.CATEGORYINFO, null, "categoryinfo")
                 .forEach((k, v) -> l.put(k, v == null ? 0 : v.getAsJsonObject().get("size").getAsInt()));
         return l;
@@ -240,13 +236,13 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, String> getPageText(Wiki wiki, Collection<String> titles) {
-        HashMap<String, String> l = new HashMap<>();
+    public static Map<String, String> getPageText(Wiki wiki, Collection<String> titles) {
+        Map<String, String> l = new HashMap<>();
         getNoContProp(wiki, titles, WQuery.PAGETEXT, null, "revisions").forEach((k, v) -> {
             if (v == null)
                 l.put(k, "");
             else {
-                ArrayList<JsonObject> jl = GSONP.getJAofJO(v.getAsJsonArray());
+                List<JsonObject> jl = GSONP.getJAofJO(v.getAsJsonArray());
                 l.put(k, jl.isEmpty() ? "" : GSONP.getStr(jl.get(0), "*"));
             }
         });
@@ -262,8 +258,8 @@ public final class MQuery {
      * @param ns Namespaces to include-only. Optional param: leave blank to disable.
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getLinksOnPage(Wiki wiki, Collection<String> titles, NS... ns) {
-        HashMap<String, String> pl = new HashMap<>();
+    public static Map<String, List<String>> getLinksOnPage(Wiki wiki, Collection<String> titles, NS... ns) {
+        Map<String, String> pl = new HashMap<>();
         if (ns != null && ns.length > 0)
             pl.put("plnamespace", wiki.nsl.createFilter(ns));
 
@@ -278,7 +274,7 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> linksHere(Wiki wiki, boolean redirects, Collection<String> titles) {
+    public static Map<String, List<String>> linksHere(Wiki wiki, boolean redirects, Collection<String> titles) {
         return parsePropToSingle(
                 getContProp(wiki, titles, WQuery.LINKSHERE, FL.pMap("lhshow", (redirects ? "" : "!") + "redirect"), "linkshere"));
     }
@@ -291,8 +287,8 @@ public final class MQuery {
      * @param ns Only return results from this/these namespace(s). Optional param: leave blank to disable.
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> transcludesIn(Wiki wiki, Collection<String> titles, NS... ns) {
-        HashMap<String, String> pl = new HashMap<>();
+    public static Map<String, List<String>> transcludesIn(Wiki wiki, Collection<String> titles, NS... ns) {
+        Map<String, String> pl = new HashMap<>();
         if (ns.length > 0)
             pl.put("tinamespace", wiki.nsl.createFilter(ns));
 
@@ -306,7 +302,7 @@ public final class MQuery {
      * @param titles The titles to query. PRECONDITION: These must be valid file names prefixed with the "File:" prefix.
      * @return A Map of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> fileUsage(Wiki wiki, Collection<String> titles) {
+    public static Map<String, List<String>> fileUsage(Wiki wiki, Collection<String> titles) {
         return parsePropToSingle(getContProp(wiki, titles, WQuery.FILEUSAGE, null, "fileusage"));
     }
 
@@ -317,7 +313,7 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A Map of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getExternalLinks(Wiki wiki, Collection<String> titles) {
+    public static Map<String, List<String>> getExternalLinks(Wiki wiki, Collection<String> titles) {
         return parsePropToSingle(getContProp(wiki, titles, WQuery.EXTLINKS, null, "extlinks"), "*");
     }
 
@@ -330,8 +326,8 @@ public final class MQuery {
      * @param titles The titles to query.
      * @return Results keyed by title. {@code true} means the title exists.
      */
-    public static HashMap<String, Boolean> exists(Wiki wiki, Collection<String> titles) {
-        HashMap<String, Boolean> l = new HashMap<>();
+    public static Map<String, Boolean> exists(Wiki wiki, Collection<String> titles) {
+        Map<String, Boolean> l = new HashMap<>();
         getNoContProp(wiki, titles, WQuery.EXISTS, null, "missing").forEach((k, v) -> l.put(k, v == null));
         return l;
     }
@@ -344,8 +340,8 @@ public final class MQuery {
      * @param titles The titles to query.
      * @return A list of titles that exist or don't exist.
      */
-    public static ArrayList<String> exists(Wiki wiki, boolean exists, Collection<String> titles) {
-        ArrayList<String> l = new ArrayList<>();
+    public static List<String> exists(Wiki wiki, boolean exists, Collection<String> titles) {
+        List<String> l = new ArrayList<>();
         exists(wiki, titles).forEach((k, v) -> {
             if (v == exists)
                 l.add(k);
@@ -361,7 +357,7 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getImagesOnPage(Wiki wiki, Collection<String> titles) {
+    public static Map<String, List<String>> getImagesOnPage(Wiki wiki, Collection<String> titles) {
         return parsePropToSingle(getContProp(wiki, titles, WQuery.IMAGES, null, "images"));
     }
 
@@ -372,7 +368,7 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getTemplatesOnPage(Wiki wiki, Collection<String> titles) {
+    public static Map<String, List<String>> getTemplatesOnPage(Wiki wiki, Collection<String> titles) {
         return parsePropToSingle(getContProp(wiki, titles, WQuery.TEMPLATES, null, "templates"));
     }
 
@@ -383,7 +379,7 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title. The inner tuple is of the form (title, shorthand url notation).
      */
-    public static HashMap<String, ArrayList<Tuple<String, String>>> globalUsage(Wiki wiki, Collection<String> titles) {
+    public static Map<String, List<Tuple<String, String>>> globalUsage(Wiki wiki, Collection<String> titles) {
         return parsePropToDouble(getContProp(wiki, titles, WQuery.GLOBALUSAGE, null, "globalusage"), "title", "wiki");
     }
 
@@ -392,10 +388,10 @@ public final class MQuery {
      *
      * @param wiki The Wiki to run the query against
      * @param titles The titles to attempt resolving.
-     * @return A HashMap where each key is the original title, and the value is the resolved title.
+     * @return A Map where each key is the original title, and the value is the resolved title.
      */
-    public static HashMap<String, String> resolveRedirects(Wiki wiki, Collection<String> titles) {
-        HashMap<String, String> l = new HashMap<>();
+    public static Map<String, String> resolveRedirects(Wiki wiki, Collection<String> titles) {
+        Map<String, String> l = new HashMap<>();
         for (String s : titles)
             l.put(s, s);
 
@@ -413,12 +409,12 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getDuplicatesOf(Wiki wiki, boolean localOnly, Collection<String> titles) {
-        HashMap<String, String> pl = new HashMap<>();
+    public static Map<String, List<String>> getDuplicatesOf(Wiki wiki, boolean localOnly, Collection<String> titles) {
+        Map<String, String> pl = new HashMap<>();
         if (localOnly)
             pl.put("dflocalonly", "");
 
-        HashMap<String, ArrayList<String>> l = parsePropToSingle(getContProp(wiki, titles, WQuery.DUPLICATEFILES, pl, "duplicatefiles"),
+        Map<String, List<String>> l = parsePropToSingle(getContProp(wiki, titles, WQuery.DUPLICATEFILES, pl, "duplicatefiles"),
                 "name");
         l.forEach((k, v) -> v.replaceAll(s -> wiki.convertIfNotInNS(s.replace('_', ' '), NS.FILE)));
 
@@ -433,12 +429,12 @@ public final class MQuery {
      * @param titles The titles to query
      * @return A list of results keyed by title.
      */
-    public static HashMap<String, ArrayList<String>> getSharedDuplicatesOf(Wiki wiki, Collection<String> titles) {
-        HashMap<String, ArrayList<Tuple<String, String>>> xl = parsePropToDouble(
+    public static Map<String, List<String>> getSharedDuplicatesOf(Wiki wiki, Collection<String> titles) {
+        Map<String, List<Tuple<String, String>>> xl = parsePropToDouble(
                 getContProp(wiki, titles, WQuery.DUPLICATEFILES, null, "duplicatefiles"), "name", "shared");
 
-        HashMap<String, ArrayList<String>> l = new HashMap<>();
-        xl.forEach((k, v) -> l.put(k, FL.toAL(v.stream().filter(t -> t.y != null).map(t -> wiki.convertIfNotInNS(t.x.replace('_', ' '), NS.FILE)))));
+        Map<String, List<String>> l = new HashMap<>();
+        xl.forEach((k, v) -> l.put(k, v.stream().filter(t -> t.y != null).map(t -> wiki.convertIfNotInNS(t.x.replace('_', ' '), NS.FILE)).collect(Collectors.toList())));
         return l;
     }
 
@@ -447,11 +443,11 @@ public final class MQuery {
      *
      * @param wiki The Wiki object to use.
      * @param titles The titles to get a text extract for.
-     * @return A Map of results keyed by title. A null mapping means that the page doesn't exist or is not eligble for
+     * @return A Map of results keyed by title. A null mapping means that the page doesn't exist or is not eligible for
      * text extract.
      */
-    public static HashMap<String, String> getTextExtracts(Wiki wiki, Collection<String> titles) {
-        HashMap<String, String> l = new HashMap<>();
+    public static Map<String, String> getTextExtracts(Wiki wiki, Collection<String> titles) {
+        Map<String, String> l = new HashMap<>();
         getNoContProp(wiki, titles, WQuery.TEXTEXTRACTS, null, "extract")
                 .forEach((k, v) -> l.put(k, v == null ? null : v.getAsString()));
 

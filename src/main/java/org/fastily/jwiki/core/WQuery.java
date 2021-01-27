@@ -7,8 +7,8 @@ import org.fastily.jwiki.util.GSONP;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Wraps the various functions of API functions of {@code action=query}.
@@ -207,20 +207,19 @@ public class WQuery {
     public static final QTemplate PREFIXSEARCH = new QTemplate(FL.pMap("list", "prefixsearch"), "pslimit", "prefixsearch");
 
     /**
-     * Type describing a HashMap with a String key and String value.
+     * Type describing a Map with a String key and String value.
      */
-    private static final Type strMapT = new TypeToken<HashMap<String, String>>() {
-    }.getType();
+    private static final Type STRING_MAP_TYPE = new TypeToken<Map<String, String>>() {}.getType();
 
     /**
      * The master parameter list. Tracks current query status.
      */
-    private final HashMap<String, String> pl = FL.pMap("action", "query", "format", "json");
+    private final Map<String, String> pl = FL.pMap("action", "query", "format", "json");
 
     /**
      * The List of limit Strings.
      */
-    private final ArrayList<String> limStrList = new ArrayList<>();
+    private final List<String> limStrList = new ArrayList<>();
 
     /**
      * The Wiki object to perform queries with
@@ -296,7 +295,7 @@ public class WQuery {
 
             JsonObject result = wiki.apiclient.basicTokenizedGET(pl).getJsonBody();
             if (result.has("continue"))
-                pl.putAll(GSONP.gson.fromJson(result.getAsJsonObject("continue"), strMapT));
+                pl.putAll(GSONP.gson.fromJson(result.getAsJsonObject("continue"), STRING_MAP_TYPE));
             else
                 canCont = false;
 

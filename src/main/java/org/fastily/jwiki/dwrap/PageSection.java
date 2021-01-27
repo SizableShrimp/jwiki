@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import org.fastily.jwiki.util.GSONP;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a paragraph in a page of wiki text.
@@ -59,8 +60,8 @@ public class PageSection {
      * @param text The text associated with the {@code jl}
      * @return A List of PageSection objects in the same order.
      */
-    public static ArrayList<PageSection> pageBySection(ArrayList<JsonObject> jl, String text) {
-        ArrayList<PageSection> psl = new ArrayList<>();
+    public static List<PageSection> pageBySection(List<JsonObject> jl, String text) {
+        List<PageSection> psl = new ArrayList<>();
         if (text.isEmpty())
             return psl;
         else if (jl.isEmpty()) {

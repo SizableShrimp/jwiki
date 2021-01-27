@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -56,8 +56,8 @@ public class WAction {
      * @param form The form data to post. This should not be URL-encoded
      * @return An {@link AReply} object holding the response data and whether it was a success.
      */
-    public static AReply postAction(Wiki wiki, String action, boolean applyToken, HashMap<String, String> form) {
-        HashMap<String, String> fl = FL.pMap("format", "json");
+    public static AReply postAction(Wiki wiki, String action, boolean applyToken, Map<String, String> form) {
+        Map<String, String> fl = FL.pMap("format", "json");
         if (applyToken)
             fl.put("token", wiki.conf.token);
 
@@ -88,8 +88,8 @@ public class WAction {
      * @param params The parameter data to use. This should not be URL-encoded
      * @return An {@link AReply} object holding the response data and whether it was a success.
      */
-    public static AReply getAction(Wiki wiki, String action, boolean applyToken, HashMap<String, String> params) {
-        HashMap<String, String> fl = FL.pMap("format", "json", "action", action);
+    public static AReply getAction(Wiki wiki, String action, boolean applyToken, Map<String, String> params) {
+        Map<String, String> fl = FL.pMap("format", "json", "action", action);
         if (applyToken)
             fl.put("token", wiki.conf.token);
 
@@ -98,7 +98,7 @@ public class WAction {
         return doAction(wiki, action, fl, false, 1);
     }
 
-    private static AReply doAction(Wiki wiki, String action, HashMap<String, String> fl, boolean isPOST, int upperLimit) {
+    private static AReply doAction(Wiki wiki, String action, Map<String, String> fl, boolean isPOST, int upperLimit) {
         try {
             TokenizedResponse response = isPOST
                     ? wiki.apiclient.basicTokenizedPOST(FL.pMap("action", action), fl)
@@ -148,7 +148,7 @@ public class WAction {
     protected static AReply addText(Wiki wiki, String title, String text, String summary, boolean append) {
         WikiLogger.info(wiki, "Adding text to {}", title);
 
-        HashMap<String, String> pl = FL.pMap("title", title, append ? "appendtext" : "prependtext", text, "summary", summary);
+        Map<String, String> pl = FL.pMap("title", title, append ? "appendtext" : "prependtext", text, "summary", summary);
         if (wiki.conf.isBot)
             pl.put("bot", "");
 
@@ -168,7 +168,7 @@ public class WAction {
     protected static AReply edit(Wiki wiki, String title, String text, String summary) {
         WikiLogger.info(wiki, "Editing {}", title);
 
-        HashMap<String, String> pl = FL.pMap("title", title, "text", text, "summary", summary);
+        Map<String, String> pl = FL.pMap("title", title, "text", text, "summary", summary);
         if (wiki.conf.isBot)
             pl.put("bot", "");
 
@@ -208,7 +208,7 @@ public class WAction {
     protected static AReply move(Wiki wiki, String title, String newTitle, boolean moveTalk, boolean moveSubpages, boolean supressRedirect, String reason) {
         WikiLogger.info(wiki, "Moving {} to {}", title, newTitle);
 
-        HashMap<String, String> pl = FL.pMap("from", title, "to", newTitle, "reason", reason);
+        Map<String, String> pl = FL.pMap("from", title, "to", newTitle, "reason", reason);
 
         if (moveTalk)
             pl.put("movetalk", "1");
@@ -254,10 +254,10 @@ public class WAction {
      * @param wiki The Wiki to work on.
      * @param titles The title(s) to purge.
      */
-    protected static AReply purge(Wiki wiki, ArrayList<String> titles) {
+    protected static AReply purge(Wiki wiki, List<String> titles) {
         WikiLogger.info(wiki, "Purging {}", titles);
 
-        HashMap<String, String> pl = FL.pMap("titles", FL.pipeFence(titles));
+        Map<String, String> pl = FL.pMap("titles", FL.pipeFence(titles));
         return postAction(wiki, "purge", false, pl);
     }
 
@@ -285,12 +285,12 @@ public class WAction {
             while ((c = cm.nextChunk()) != null) {
                 WikiLogger.trace(wiki, "Uploading chunk [{} of {}] of '{}'", cm.chunkCnt, cm.totalChunks, file);
 
-                HashMap<String, String> pl = FL.pMap("format", "json", "filename", title, "token", wiki.conf.token, "ignorewarnings", "1", "stash", "1", "offset", "" + c.offset, "filesize",
+                Map<String, String> pl = FL.pMap("format", "json", "filename", title, "token", wiki.conf.token, "ignorewarnings", "1", "stash", "1", "offset", "" + c.offset, "filesize",
                         "" + c.filesize);
                 if (filekey != null)
                     pl.put("filekey", filekey);
 
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 5; i++) {
                     try {
                         Response r = wiki.apiclient.multiPartFilePOST(FL.pMap("action", "upload"), pl, fn, c.bl);
                         if (!r.isSuccessful()) {
@@ -304,6 +304,7 @@ public class WAction {
                     } catch (Throwable e) {
                         WikiLogger.error(wiki, "Encountered an error, retrying - {}", i, e);
                     }
+                }
             }
 
             for (int i = 0; i < 3; i++) {
@@ -347,7 +348,7 @@ public class WAction {
         /**
          * The default chunk size is 4 Mb
          */
-        private static final int chunksize = 1024 * 1024 * 4;
+        private static final int CHUNK_SIZE = 1024 * 1024 * 4;
 
         /**
          * The source file stream
@@ -383,7 +384,7 @@ public class WAction {
         private ChunkManager(Path fn) throws IOException {
             filesize = Files.size(fn);
             src = Okio.buffer(Okio.source(fn, StandardOpenOption.READ));
-            totalChunks = filesize / chunksize + ((filesize % chunksize) > 0 ? 1 : 0);
+            totalChunks = filesize / CHUNK_SIZE + ((filesize % CHUNK_SIZE) > 0 ? 1 : 0);
         }
 
         /**
@@ -405,9 +406,9 @@ public class WAction {
                 return null;
 
             try {
-                Chunk c = new Chunk(offset, filesize, ++chunkCnt == totalChunks ? src.readByteArray() : src.readByteArray(chunksize));
+                Chunk c = new Chunk(offset, filesize, ++chunkCnt == totalChunks ? src.readByteArray() : src.readByteArray(CHUNK_SIZE));
 
-                offset += chunksize;
+                offset += CHUNK_SIZE;
                 // chunkCnt++;
 
                 if (!has())

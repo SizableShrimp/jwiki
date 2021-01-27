@@ -5,8 +5,11 @@ import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -131,12 +134,12 @@ public final class NS {
         /**
          * The Map of all valid namespace-number pairs.
          */
-        protected final HashMap<Object, Object> nsM = new HashMap<>();
+        protected final Map<Object, Object> nsM = new HashMap<>();
 
         /**
          * The List of valid namespaces as Strings.
          */
-        protected final ArrayList<String> nsL = new ArrayList<>();
+        protected final List<String> nsL = new ArrayList<>();
 
         /**
          * Regex used to strip the namespace from a title.
@@ -172,7 +175,7 @@ public final class NS {
                 nsL.add(name);
             }
 
-            nssRegex = String.format("(?i)^(%s):", FL.pipeFence(FL.toAL(nsL.stream().map(s -> s.replace(" ", "(_| )")))));
+            nssRegex = String.format("(?i)^(%s):", FL.pipeFence(nsL.stream().map(s -> s.replace(" ", "(_| )")).collect(Collectors.toList())));
             p = Pattern.compile(nssRegex);
         }
 
@@ -183,7 +186,7 @@ public final class NS {
          * @return The raw filter string.
          */
         protected String createFilter(NS... nsl) {
-            return FL.pipeFence(FL.toSet(Stream.of(nsl).map(e -> "" + e.v)));
+            return FL.pipeFence(Stream.of(nsl).map(e -> "" + e.v).collect(Collectors.toSet()));
         }
     }
 }

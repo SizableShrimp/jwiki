@@ -23,7 +23,7 @@ public class QReply extends AReply {
     /**
      * Default path to json for {@code prop} queries.
      */
-    protected static final ArrayList<String> defaultPropPTJ = FL.toSAL("query", "pages");
+    protected static final List<String> defaultPropPTJ = List.of("query", "pages");
 
     /**
      * Tracks {@code normalized} titles. The key is the {@code from} (non-normalized) title and the value is the
@@ -66,14 +66,14 @@ public class QReply extends AReply {
 
     /**
      * Performs simple {@code prop} query Response comprehension. Collects two values from each returned {@code prop}
-     * query item in a HashMap. Title normalization is automatically applied.
+     * query item in a Map. Title normalization is automatically applied.
      *
-     * @param kk Points to the String to set as the HashMap key in each {@code prop} query item.
-     * @param vk Points to the JsonElement to set as the HashMap value in each {@code prop} query item.
-     * @return A lightly processed HashMap of {@code prop} data.
+     * @param kk Points to the String to set as the Map key in each {@code prop} query item.
+     * @param vk Points to the JsonElement to set as the Map value in each {@code prop} query item.
+     * @return A lightly processed Map of {@code prop} data.
      */
-    public HashMap<String, JsonElement> propComp(String kk, String vk) {
-        HashMap<String, JsonElement> m = new HashMap<>();
+    public Map<String, JsonElement> propComp(String kk, String vk) {
+        Map<String, JsonElement> m = new HashMap<>();
 
         JsonObject x = GSONP.getNestedJO(this.response, defaultPropPTJ);
         if (x == null)
@@ -105,7 +105,7 @@ public class QReply extends AReply {
      * @param m The Map of elements to normalize.
      * @return {@code m}, for chaining convenience.
      */
-    public <V> HashMap<String, V> normalize(HashMap<String, V> m) {
+    public <V> Map<String, V> normalize(Map<String, V> m) {
         if (normalized != null)
             normalized.forEach((f, t) -> {
                 if (m.containsKey(t))

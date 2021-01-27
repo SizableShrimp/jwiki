@@ -39,7 +39,7 @@ public class ActionTests extends BaseMockTemplate {
     @Test
     public void testMove() {
         addResponse("mockMovePage");
-        assertTrue(wiki.move("User:Example/12345678", "User:Example/1", true, true, true, "This is a test"));
+        assertTrue(wiki.move("User:Example/12345678", "User:Example/1", true, true, true, "This is a test").isSuccess());
     }
 
     /**
@@ -48,7 +48,7 @@ public class ActionTests extends BaseMockTemplate {
     @Test
     public void testEdit() {
         addResponse("mockSuccessEdit");
-        assertTrue(wiki.edit("Wikipedia:Sandbox", "Hello, World!", "This is a test"));
+        assertTrue(wiki.edit("Wikipedia:Sandbox", "Hello, World!", "This is a test").isSuccess());
     }
 
     /**
@@ -58,8 +58,8 @@ public class ActionTests extends BaseMockTemplate {
     public void testAddText() {
         addResponse("mockSuccessEdit");
         addResponse("mockSuccessEdit");
-        assertTrue(wiki.addText("Wikipedia:Sandbox", "Appending text!", "test", true));
-        assertTrue(wiki.addText("Wikipedia:Sandbox", "Appending text!", "test", false));
+        assertTrue(wiki.addText("Wikipedia:Sandbox", "Appending text!", "test", true).isSuccess());
+        assertTrue(wiki.addText("Wikipedia:Sandbox", "Appending text!", "test", false).isSuccess());
     }
 
     /**
@@ -71,7 +71,7 @@ public class ActionTests extends BaseMockTemplate {
         addResponse("mockFileUnstash");
 
         try {
-            assertTrue(wiki.upload(Paths.get(getClass().getResource("uploadTestFile.svg").toURI()), "TestSVG.svg", "desc", "summary"));
+            assertTrue(wiki.upload(Paths.get(getClass().getResource("uploadTestFile.svg").toURI()), "TestSVG.svg", "desc", "summary").isSuccess());
         } catch (Throwable e) {
             fail("Should never reach here - is the classpath messed up or a test resource missing?", e);
         }
@@ -85,7 +85,7 @@ public class ActionTests extends BaseMockTemplate {
         addResponse("mockUploadByUrl");
 
         try {
-            assertTrue(wiki.uploadByUrl(HttpUrl.parse("https://upload.wikimedia.org/wikipedia/en/a/a1/Example.jpg"), "TestFile.jpg", "desc", "summary"));
+            assertTrue(wiki.uploadByUrl(HttpUrl.parse("https://upload.wikimedia.org/wikipedia/en/a/a1/Example.jpg"), "TestFile.jpg", "desc", "summary").isSuccess());
         } catch (Throwable e) {
             fail("Should never reach here - is the classpath messed up or a test resource missing?", e);
         }

@@ -14,10 +14,13 @@ import javax.xml.stream.events.XMLEvent;
 import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Deque;
+import java.util.List;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Parses wikitext into a DOM-style, manipulatable format that is easy to work with.
@@ -39,7 +42,7 @@ public class WParser {
      * @param queryParams Parameters to POST to the server
      * @return A WikiText object, or null on error.
      */
-    private static WikiText parse(Wiki wiki, HashMap<String, String> queryParams) {
+    private static WikiText parse(Wiki wiki, Map<String, String> queryParams) {
         queryParams.put("prop", "parsetree");
         try {
             XMLEventReader r = XMLInputFactory.newInstance()
@@ -214,7 +217,7 @@ public class WParser {
         /**
          * Data structure backing wikitext storage.
          */
-        protected ArrayDeque<Object> l = new ArrayDeque<>();
+        protected Deque<Object> l = new ArrayDeque<>();
 
         /**
          * Creates a new WikiText object
@@ -248,8 +251,8 @@ public class WParser {
          *
          * @return A List of top-level WTemplates in this WikiText.
          */
-        public ArrayList<WTemplate> getTemplates() {
-            return FL.toAL(l.stream().filter(o -> o instanceof WTemplate).map(o -> (WTemplate) o));
+        public List<WTemplate> getTemplates() {
+            return l.stream().filter(o -> o instanceof WTemplate).map(o -> (WTemplate) o).collect(Collectors.toList());
         }
 
         /**
@@ -257,8 +260,8 @@ public class WParser {
          *
          * @return A List of all WTemplate objects in this WikiText.
          */
-        public ArrayList<WTemplate> getTemplatesR() {
-            ArrayList<WTemplate> wtl = new ArrayList<>();
+        public List<WTemplate> getTemplatesR() {
+            List<WTemplate> wtl = new ArrayList<>();
             getTemplatesR(wtl);
 
             return wtl;
@@ -270,7 +273,7 @@ public class WParser {
          * @param wtl Any WTemplate objects found will be added to this List.
          * @see #getTemplatesR()
          */
-        private void getTemplatesR(ArrayList<WTemplate> wtl) {
+        private void getTemplatesR(List<WTemplate> wtl) {
             l.stream().filter(o -> o instanceof WTemplate).map(o -> (WTemplate) o).forEach(t -> {
                 for (WikiText wt : t.params.values())
                     wt.getTemplatesR(wtl);
@@ -321,7 +324,7 @@ public class WParser {
         /**
          * The Map tracking this object's parameters.
          */
-        protected LinkedHashMap<String, WikiText> params = new LinkedHashMap<>();
+        protected Map<String, WikiText> params = new LinkedHashMap<>();
 
         /**
          * Creates a new, empty WTemplate object.
@@ -438,7 +441,7 @@ public class WParser {
          *
          * @return The keyset for this WTemplate.
          */
-        public HashSet<String> keySet() {
+        public Set<String> keySet() {
             return new HashSet<>(params.keySet());
         }
 
@@ -451,12 +454,12 @@ public class WParser {
         public String toString(boolean indent) {
             String base = (indent ? "%n" : "") + "|%s=%s";
 
-            String x = "";
+            StringBuilder x = new StringBuilder();
             for (Map.Entry<String, WikiText> e : params.entrySet())
-                x += String.format(base, e.getKey(), e.getValue());
+                x.append(String.format(base, e.getKey(), e.getValue()));
 
             if (indent)
-                x += "\n";
+                x.append('\n');
 
             return String.format("{{%s%s}}", title, x);
         }

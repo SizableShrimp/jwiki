@@ -4,6 +4,7 @@ import org.fastily.jwiki.core.Wiki;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for WAction. Tests are performed as if the user is logged in.
@@ -39,7 +40,7 @@ public class AuthActionTests extends BaseMockTemplate {
     @Test
     public void testDelete() {
         addResponse("mockDeleteSuccess");
-        assertTrue(wiki.delete("Test", "Test Reason"));
+        assertTrue(wiki.delete("Test", "Test Reason").isSuccess());
     }
 
     /**
@@ -48,6 +49,6 @@ public class AuthActionTests extends BaseMockTemplate {
     @Test
     public void testUndelete() {
         addResponse("mockUndeleteSuccess");
-        assertTrue(wiki.undelete("Test", "test"));
+        assertTrue(wiki.undelete("Test", "test").isSuccess());
     }
 }

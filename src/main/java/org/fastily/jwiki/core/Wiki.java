@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -156,7 +156,7 @@ public class Wiki {
     /**
      * Our list of currently logged in Wiki's associated with this object. Useful for global operations.
      */
-    private HashMap<String, Wiki> wl = new HashMap<>();
+    private Map<String, Wiki> wl = new HashMap<>();
 
     /**
      * Our namespace manager
@@ -267,7 +267,7 @@ public class Wiki {
      * @return The {@link TokenizedResponse} from the server, or null on error.
      */
     public TokenizedResponse basicGET(String action, String... params) {
-        HashMap<String, String> pl = FL.pMap(params);
+        Map<String, String> pl = FL.pMap(params);
         pl.put("action", action);
         pl.put("format", "json");
 
@@ -287,7 +287,7 @@ public class Wiki {
      * @param form The form data to post. This will be automatically URL-encoded.
      * @return The {@link TokenizedResponse} from the server, or null on error.
      */
-    public TokenizedResponse basicPOST(String action, HashMap<String, String> form) {
+    public TokenizedResponse basicPOST(String action, Map<String, String> form) {
         form.put("format", "json");
 
         try {
@@ -324,9 +324,9 @@ public class Wiki {
      * @param ns Pages in this/these namespace(s) will be returned.
      * @return Titles belonging to a NS in {@code ns}
      */
-    public ArrayList<String> filterByNS(ArrayList<String> pages, NS... ns) {
-        HashSet<NS> l = new HashSet<>(Arrays.asList(ns));
-        return FL.toAL(pages.stream().filter(s -> l.contains(whichNS(s))));
+    public List<String> filterByNS(List<String> pages, NS... ns) {
+        List<NS> l = Arrays.asList(ns);
+        return pages.stream().filter(s -> l.contains(whichNS(s))).collect(Collectors.toList());
     }
 
     /**
@@ -380,8 +380,8 @@ public class Wiki {
      * @param l The Collection of titles to strip namespaces from
      * @return A List where each of the titles does not have a namespace.
      */
-    public ArrayList<String> nss(Collection<String> l) {
-        return FL.toAL(l.stream().map(this::nss));
+    public List<String> nss(Collection<String> l) {
+        return l.stream().map(this::nss).collect(Collectors.toList());
     }
 
     /**
@@ -587,7 +587,7 @@ public class Wiki {
      * @param ns The namespace to filter by. Optional param - set null to disable
      * @return A list of titles on this Wiki, as specified.
      */
-    public ArrayList<String> allPages(String prefix, boolean redirectsOnly, boolean protectedOnly, int cap, NS ns) {
+    public List<String> allPages(String prefix, boolean redirectsOnly, boolean protectedOnly, int cap, NS ns) {
         WikiLogger.info(this, "Doing all pages fetch for {}", prefix == null ? "all pages" : prefix);
 
         WQuery wq = new WQuery(this, cap, WQuery.ALLPAGES);
@@ -600,9 +600,9 @@ public class Wiki {
         if (protectedOnly)
             wq.set("apprtype", "edit|move|upload");
 
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("allpages").stream().map(jo -> GSONP.getStr(jo, "title"))));
+            l.addAll(wq.next().listComp("allpages").stream().map(jo -> GSONP.getStr(jo, "title")).collect(Collectors.toList()));
         }
 
         return l;
@@ -625,7 +625,7 @@ public class Wiki {
      * @param title The title to query. PRECONDITION: This must be a valid file name prefixed with the "File:" prefix, or you will get strange results.
      * @return A list of pages linking to the file.
      */
-    public ArrayList<String> fileUsage(String title) {
+    public List<String> fileUsage(String title) {
         WikiLogger.info(this, "Fetching local file usage of {}", title);
         return MQuery.fileUsage(this, FL.toSAL(title)).get(title);
     }
@@ -635,9 +635,9 @@ public class Wiki {
      *
      * @return A list of file extensions for files which can be uploaded to this Wiki.
      */
-    public ArrayList<String> getAllowedFileExts() {
+    public List<String> getAllowedFileExts() {
         WikiLogger.info(this, "Fetching a list of permissible file extensions");
-        return FL.toAL(new WQuery(this, WQuery.ALLOWEDFILEXTS).next().listComp("fileextensions").stream().map(e -> GSONP.getStr(e, "ext")));
+        return new WQuery(this, WQuery.ALLOWEDFILEXTS).next().listComp("fileextensions").stream().map(e -> GSONP.getStr(e, "ext")).collect(Collectors.toList());
     }
 
     /**
@@ -646,7 +646,7 @@ public class Wiki {
      * @param title The title to get categories of.
      * @return A list of categories, or the empty list if something went wrong.
      */
-    public ArrayList<String> getCategoriesOnPage(String title) {
+    public List<String> getCategoriesOnPage(String title) {
         WikiLogger.info(this, "Getting categories of {}", title);
         return MQuery.getCategoriesOnPage(this, FL.toSAL(title)).get(title);
     }
@@ -658,16 +658,16 @@ public class Wiki {
      * @param ns Namespace filter. Any title not in the specified namespace(s) will be ignored. Leave blank to select all namespaces. CAVEAT: skipped items are counted against {@code cap}.
      * @return The list of titles, as specified, in the category.
      */
-    public ArrayList<String> getCategoryMembers(String title, NS... ns) {
+    public List<String> getCategoryMembers(String title, NS... ns) {
         WikiLogger.info(this, "Getting category members from {}", title);
 
         WQuery wq = new WQuery(this, WQuery.CATEGORYMEMBERS).set("cmtitle", convertIfNotInNS(title, NS.CATEGORY));
         if (ns.length > 0)
             wq.set("cmnamespace", nsl.createFilter(ns));
 
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("categorymembers").stream().map(e -> GSONP.getStr(e, "title"))));
+            l.addAll(wq.next().listComp("categorymembers").stream().map(e -> GSONP.getStr(e, "title")).collect(Collectors.toList()));
         }
 
         return l;
@@ -694,7 +694,7 @@ public class Wiki {
      * @param ns Restrict titles returned to the specified Namespace(s). Optional, leave blank to select all namespaces.
      * @return A list of contributions.
      */
-    public ArrayList<Contrib> getContribs(String user, int cap, boolean olderFirst, boolean createdOnly, NS... ns) {
+    public List<Contrib> getContribs(String user, int cap, boolean olderFirst, boolean createdOnly, NS... ns) {
         WikiLogger.info(this, "Fetching contribs of {}", user);
 
         WQuery wq = new WQuery(this, cap, WQuery.USERCONTRIBS).set("ucuser", user);
@@ -705,9 +705,9 @@ public class Wiki {
         if (createdOnly)
             wq.set("ucshow", "new");
 
-        ArrayList<Contrib> l = new ArrayList<>();
+        List<Contrib> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("usercontribs").stream().map(jo -> GSONP.gson.fromJson(jo, Contrib.class))));
+            l.addAll(wq.next().listComp("usercontribs").stream().map(jo -> GSONP.gson.fromJson(jo, Contrib.class)).collect(Collectors.toList()));
         }
 
         return l;
@@ -720,7 +720,7 @@ public class Wiki {
      * @param localOnly Set to true to restrict results to <span style="font-weight:bold;">local</span> duplicates only.
      * @return Duplicates of this file.
      */
-    public ArrayList<String> getDuplicatesOf(String title, boolean localOnly) {
+    public List<String> getDuplicatesOf(String title, boolean localOnly) {
         WikiLogger.info(this, "Getting duplicates of {}", title);
         return MQuery.getDuplicatesOf(this, localOnly, FL.toSAL(title)).get(title);
     }
@@ -731,7 +731,7 @@ public class Wiki {
      * @param title The title to query
      * @return A List of external links found on the page.
      */
-    public ArrayList<String> getExternalLinks(String title) {
+    public List<String> getExternalLinks(String title) {
         WikiLogger.info(this, "Getting external links on {}", title);
         return MQuery.getExternalLinks(this, FL.toSAL(title)).get(title);
     }
@@ -742,7 +742,7 @@ public class Wiki {
      * @param title The title of the file to use (must be in the file namespace and exist, else return null)
      * @return A list of ImageInfo objects, one for each revision. The order is newer -&gt; older.
      */
-    public ArrayList<ImageInfo> getImageInfo(String title) {
+    public List<ImageInfo> getImageInfo(String title) {
         WikiLogger.info(this, "Getting image info for {}", title);
         return MQuery.getImageInfo(this, FL.toSAL(title)).get(title);
     }
@@ -753,7 +753,7 @@ public class Wiki {
      * @param title The title to query
      * @return The images found on <code>title</code>
      */
-    public ArrayList<String> getImagesOnPage(String title) {
+    public List<String> getImagesOnPage(String title) {
         WikiLogger.info(this, "Getting files on {}", title);
         return MQuery.getImagesOnPage(this, FL.toSAL(title)).get(title);
     }
@@ -780,7 +780,7 @@ public class Wiki {
      * @param ns Namespaces to include-only. Optional, leave blank to select all namespaces.
      * @return The list of wiki links on the page.
      */
-    public ArrayList<String> getLinksOnPage(String title, NS... ns) {
+    public List<String> getLinksOnPage(String title, NS... ns) {
         WikiLogger.info(this, "Getting wiki links on {}", title);
         return MQuery.getLinksOnPage(this, FL.toSAL(title), ns).get(title);
     }
@@ -793,8 +793,8 @@ public class Wiki {
      * @param ns Namespaces to include-only. Optional, leave blank to select all namespaces.
      * @return The list of existing links on {@code title}
      */
-    public ArrayList<String> getLinksOnPage(boolean exists, String title, NS... ns) {
-        return FL.toAL(MQuery.exists(this, getLinksOnPage(title, ns)).entrySet().stream().filter(t -> t.getValue() == exists).map(Map.Entry::getKey));
+    public List<String> getLinksOnPage(boolean exists, String title, NS... ns) {
+        return MQuery.exists(this, getLinksOnPage(title, ns)).entrySet().stream().filter(t -> t.getValue() == exists).map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
     /**
@@ -806,7 +806,7 @@ public class Wiki {
      * @param cap Limits the number of entries returned from this log. Optional - set -1 to disable
      * @return The log entries.
      */
-    public ArrayList<LogEntry> getLogs(String title, String user, String type, int cap) {
+    public List<LogEntry> getLogs(String title, String user, String type, int cap) {
         WikiLogger.info(this, "Fetching log entries -> title: {}, user: {}, type: {}", title, user, type);
 
         WQuery wq = new WQuery(this, cap, WQuery.LOGEVENTS);
@@ -817,9 +817,9 @@ public class Wiki {
         if (type != null)
             wq.set("letype", type);
 
-        ArrayList<LogEntry> l = new ArrayList<>();
+        List<LogEntry> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("logevents").stream().map(jo -> GSONP.gson.fromJson(jo, LogEntry.class))));
+            l.addAll(wq.next().listComp("logevents").stream().map(jo -> GSONP.gson.fromJson(jo, LogEntry.class)).collect(Collectors.toList()));
         }
 
         return l;
@@ -857,9 +857,9 @@ public class Wiki {
      * @param limit The maximum number of returned entries. Set -1 to disable.
      * @param olderFirst Set to true to get older entries first.
      * @param ns Namespace filter, limits returned titles to these namespaces. Optional param - leave blank to disable.
-     * @return An ArrayList of protected titles.
+     * @return An List of protected titles.
      */
-    public ArrayList<ProtectedTitleEntry> getProtectedTitles(int limit, boolean olderFirst, NS... ns) {
+    public List<ProtectedTitleEntry> getProtectedTitles(int limit, boolean olderFirst, NS... ns) {
         WikiLogger.info(this, "Fetching a list of protected titles");
 
         WQuery wq = new WQuery(this, limit, WQuery.PROTECTEDTITLES);
@@ -868,9 +868,9 @@ public class Wiki {
         if (olderFirst)
             wq.set("ptdir", "newer"); // MediaWiki is weird.
 
-        ArrayList<ProtectedTitleEntry> l = new ArrayList<>();
+        List<ProtectedTitleEntry> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("protectedtitles").stream().map(jo -> GSONP.gson.fromJson(jo, ProtectedTitleEntry.class))));
+            l.addAll(wq.next().listComp("protectedtitles").stream().map(jo -> GSONP.gson.fromJson(jo, ProtectedTitleEntry.class)).collect(Collectors.toList()));
         }
 
         return l;
@@ -883,20 +883,20 @@ public class Wiki {
      * @param ns Returned titles will be in these namespaces. Optional param - leave blank to disable.
      * @return A list of random titles on this Wiki.
      */
-    public ArrayList<String> getRandomPages(int limit, NS... ns) {
+    public List<String> getRandomPages(int limit, NS... ns) {
         WikiLogger.info(this, "Fetching random page(s)");
 
         if (limit < 0)
             throw new IllegalArgumentException("limit for getRandomPages() cannot be a negative number");
 
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
         WQuery wq = new WQuery(this, limit, WQuery.RANDOM);
 
         if (ns.length > 0)
             wq.set("rnnamespace", nsl.createFilter(ns));
 
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("random").stream().map(e -> GSONP.getStr(e, "title"))));
+            l.addAll(wq.next().listComp("random").stream().map(e -> GSONP.getStr(e, "title")).collect(Collectors.toList()));
         }
 
         return l;
@@ -910,10 +910,11 @@ public class Wiki {
      * @param end The Instant to stop enumerating at. {@code start} must be set, otherwise this will be ignored. Optional param - set null to disable.
      * @return A list Recent Changes where return order is newer -&gt; Older
      */
-    public ArrayList<RCEntry> getRecentChanges(Instant start, Instant end) {
+    public List<RCEntry> getRecentChanges(Instant start, Instant end) {
         WikiLogger.info(this, "Querying recent changes");
 
-        Instant s = start, e = end;
+        Instant s = start;
+        Instant e = end;
         if (s == null)
             s = (e = Instant.now()).minusSeconds(30);
         else if (e != null && e.isBefore(s)) // implied s != null
@@ -924,9 +925,9 @@ public class Wiki {
         if (e != null)
             wq.set("rcstart", e.toString());
 
-        ArrayList<RCEntry> l = new ArrayList<>();
+        List<RCEntry> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("recentchanges").stream().map(jo -> GSONP.gson.fromJson(jo, RCEntry.class))));
+            l.addAll(wq.next().listComp("recentchanges").stream().map(jo -> GSONP.gson.fromJson(jo, RCEntry.class)).collect(Collectors.toList()));
         }
 
         return l;
@@ -942,7 +943,7 @@ public class Wiki {
      * @param end The instant to stop enumerating at. Optional param - set null to disable.
      * @return A list of page revisions
      */
-    public ArrayList<Revision> getRevisions(String title, int cap, boolean olderFirst, Instant start, Instant end) {
+    public List<Revision> getRevisions(String title, int cap, boolean olderFirst, Instant start, Instant end) {
         WikiLogger.info(this, "Getting revisions from {}", title);
 
         WQuery wq = new WQuery(this, cap, WQuery.REVISIONS).set("titles", title);
@@ -954,11 +955,11 @@ public class Wiki {
             wq.set("rvend", start.toString());
         }
 
-        ArrayList<Revision> l = new ArrayList<>();
+        List<Revision> l = new ArrayList<>();
         while (wq.has()) {
             JsonElement e = wq.next().propComp("title", "revisions").get(title);
             if (e != null)
-                l.addAll(FL.toAL(GSONP.getJAofJO(e.getAsJsonArray()).stream().map(jo -> GSONP.gson.fromJson(jo, Revision.class))));
+                l.addAll(GSONP.getJAofJO(e.getAsJsonArray()).stream().map(jo -> GSONP.gson.fromJson(jo, Revision.class)).collect(Collectors.toList()));
         }
         return l;
     }
@@ -968,9 +969,9 @@ public class Wiki {
      * extension installed.
      *
      * @param title The title of the file to query
-     * @return An ArrayList containing shared duplicates of the file
+     * @return An List containing shared duplicates of the file
      */
-    public ArrayList<String> getSharedDuplicatesOf(String title) {
+    public List<String> getSharedDuplicatesOf(String title) {
         WikiLogger.info(this, "Getting shared duplicates of {}", title);
         return MQuery.getSharedDuplicatesOf(this, FL.toSAL(title)).get(title);
     }
@@ -981,7 +982,7 @@ public class Wiki {
      * @param title The title to query.
      * @return The templates transcluded on <code>title</code>
      */
-    public ArrayList<String> getTemplatesOnPage(String title) {
+    public List<String> getTemplatesOnPage(String title) {
         WikiLogger.info(this, "Getting templates transcluded on {}", title);
         return MQuery.getTemplatesOnPage(this, FL.toSAL(title)).get(title);
     }
@@ -1003,13 +1004,13 @@ public class Wiki {
      * @param user The username, without the "User:" prefix. PRECONDITION: <code>user</code> must be a valid username.
      * @return This user's uploads
      */
-    public ArrayList<String> getUserUploads(String user) {
+    public List<String> getUserUploads(String user) {
         WikiLogger.info(this, "Fetching uploads for {}", user);
 
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
         WQuery wq = new WQuery(this, WQuery.USERUPLOADS).set("aiuser", nss(user));
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("allimages").stream().map(e -> GSONP.getStr(e, "title"))));
+            l.addAll(wq.next().listComp("allimages").stream().map(e -> GSONP.getStr(e, "title")).collect(Collectors.toList()));
         }
 
         return l;
@@ -1019,9 +1020,9 @@ public class Wiki {
      * Gets the global usage of a file. PRECONDITION: GlobalUsage must be installed on the target Wiki.
      *
      * @param title The title to query. Must start with <code>File:</code> prefix.
-     * @return A HashMap with the global usage of this file; each element is of the form <code>[ title : wiki ]</code>.
+     * @return A List with the global usage of this file; each element is of the form <code>[ title : wiki ]</code>.
      */
-    public ArrayList<Tuple<String, String>> globalUsage(String title) {
+    public List<Tuple<String, String>> globalUsage(String title) {
         WikiLogger.info(this, "Getting global usage for {}", title);
         return MQuery.globalUsage(this, FL.toSAL(title)).get(title);
     }
@@ -1032,7 +1033,7 @@ public class Wiki {
      * @param user The user to get rights information for. Do not include "User:" prefix.
      * @return The usergroups {@code user} belongs to, or null if {@code user} is an IP or non-existent user.
      */
-    public ArrayList<String> listUserRights(String user) {
+    public List<String> listUserRights(String user) {
         WikiLogger.info(this, "Getting user rights for {}", user);
         return MQuery.listUserRights(this, FL.toSAL(user)).get(user);
     }
@@ -1044,7 +1045,7 @@ public class Wiki {
      * @param prefix Get all titles in the specified namespace, that start with this String. To select subpages only, append a {@code /} to the end of this parameter.
      * @return The list of titles starting with the specified prefix.
      */
-    public ArrayList<String> prefixIndex(NS namespace, String prefix) {
+    public List<String> prefixIndex(NS namespace, String prefix) {
         return namespace == null ? prefixIndex(prefix) : prefixIndex(prefix, namespace);
     }
 
@@ -1055,7 +1056,7 @@ public class Wiki {
      * @param prefix Get all titles in the specified namespace, that start with this String. To select subpages only, append a {@code /} to the end of this parameter.
      * @return The list of titles starting with the specified prefix.
      */
-    public ArrayList<String> prefixIndex(String prefix, NS... namespaces) {
+    public List<String> prefixIndex(String prefix, NS... namespaces) {
         WikiLogger.info(this, "Doing prefix index search for {}", prefix);
         WQuery wq = new WQuery(this, -1, WQuery.PREFIXSEARCH);
         if (prefix != null)
@@ -1063,9 +1064,9 @@ public class Wiki {
         if (namespaces != null)
             wq.set("psnamespace", String.join("|", Arrays.stream(namespaces).map(ns -> ns.v + "").collect(Collectors.toSet())));
 
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("prefixsearch").stream().map(jo -> GSONP.getStr(jo, "title"))));
+            l.addAll(wq.next().listComp("prefixsearch").stream().map(jo -> GSONP.getStr(jo, "title")).collect(Collectors.toList()));
         }
 
         return l;
@@ -1079,15 +1080,15 @@ public class Wiki {
      * @param cap The maximum number of elements to return. Use {@code -1} to get everything, but be careful because some pages can have 10k+ entries.
      * @return A List of titles returned by this special page.
      */
-    public ArrayList<String> querySpecialPage(String title, int cap) {
+    public List<String> querySpecialPage(String title, int cap) {
         WikiLogger.info(this, "Querying special page {}", title);
 
         WQuery wq = new WQuery(this, cap, WQuery.QUERYPAGES).set("qppage", nss(title));
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
 
         while (wq.has()) {
             try {
-                l.addAll(FL.toAL(FL.streamFrom(GSONP.getNestedJA(wq.next().getResponse(), FL.toSAL("query", "querypage", "results"))).map(e -> GSONP.getStr(e.getAsJsonObject(), "title"))));
+                l.addAll(FL.streamFrom(GSONP.getNestedJA(wq.next().getResponse(), FL.toSAL("query", "querypage", "results"))).map(e -> GSONP.getStr(e.getAsJsonObject(), "title")).collect(Collectors.toList()));
             } catch (Throwable e) {
                 WikiLogger.error(this, "Error when querying special page", e);
             }
@@ -1114,15 +1115,15 @@ public class Wiki {
      * @param ns Limit search to these namespaces. Optional, leave blank to disable. The default behavior is to search all namespaces.
      * @return A List of titles found by the search.
      */
-    public ArrayList<String> search(String query, int limit, NS... ns) {
+    public List<String> search(String query, int limit, NS... ns) {
         WQuery wq = new WQuery(this, limit, WQuery.SEARCH).set("srsearch", query);
 
         if (ns.length > 0)
             wq.set("srnamespace", nsl.createFilter(ns));
 
-        ArrayList<String> l = new ArrayList<>();
+        List<String> l = new ArrayList<>();
         while (wq.has()) {
-            l.addAll(FL.toAL(wq.next().listComp("search").stream().map(e -> GSONP.getStr(e, "title"))));
+            l.addAll(wq.next().listComp("search").stream().map(e -> GSONP.getStr(e, "title")).collect(Collectors.toList()));
         }
 
         return l;
@@ -1132,9 +1133,9 @@ public class Wiki {
      * Splits the text of a page by header.
      *
      * @param title The title to query
-     * @return An ArrayList where each section (in order) is contained in a PageSection object.
+     * @return An List where each section (in order) is contained in a PageSection object.
      */
-    public ArrayList<PageSection> splitPageByHeader(String title) {
+    public List<PageSection> splitPageByHeader(String title) {
         WikiLogger.info(this, "Splitting {} by header", title);
 
         try {
@@ -1155,7 +1156,7 @@ public class Wiki {
      * @param redirects Set to true to get redirects only. Set to false to filter out all redirects.
      * @return A list of links or redirects to this page.
      */
-    public ArrayList<String> whatLinksHere(String title, boolean redirects) {
+    public List<String> whatLinksHere(String title, boolean redirects) {
         WikiLogger.info(this, "Getting links to {}", title);
         return MQuery.linksHere(this, redirects, FL.toSAL(title)).get(title);
     }
@@ -1167,7 +1168,7 @@ public class Wiki {
      * @param title The title to query
      * @return A list of links to this page.
      */
-    public ArrayList<String> whatLinksHere(String title) {
+    public List<String> whatLinksHere(String title) {
         return whatLinksHere(title, false);
     }
 
@@ -1178,7 +1179,7 @@ public class Wiki {
      * @param ns Only return results from this/these namespace(s). Optional param: leave blank to disable.
      * @return The pages transcluding <code>title</code>.
      */
-    public ArrayList<String> whatTranscludesHere(String title, NS... ns) {
+    public List<String> whatTranscludesHere(String title, NS... ns) {
         WikiLogger.info(this, "Getting list of pages that transclude {}", title);
         return MQuery.transcludesIn(this, FL.toSAL(title), ns).get(title);
     }
