@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  *
  * @author Fastily
  */
-class ApiClient {
+public class ApiClient {
     /**
      * MediaType for {@code application/octet-stream}.
      */
@@ -44,6 +44,8 @@ class ApiClient {
      */
     private final Wiki wiki;
 
+    private final JwikiCookieJar cookieJar;
+
     /**
      * Constructor, create a new ApiClient for a Wiki instance.
      *
@@ -53,11 +55,12 @@ class ApiClient {
     protected ApiClient(Wiki wiki, Proxy proxy) {
         this.wiki = wiki;
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder().cookieJar(new JwikiCookieJar()).readTimeout(2, TimeUnit.MINUTES);
+        this.cookieJar = new JwikiCookieJar();
+        OkHttpClient.Builder builder = new OkHttpClient.Builder().cookieJar(this.cookieJar).readTimeout(2, TimeUnit.MINUTES);
         if (proxy != null)
             builder.proxy(proxy);
 
-        client = builder.build();
+        this.client = builder.build();
     }
 
     /**
@@ -67,18 +70,17 @@ class ApiClient {
      * @param to The new Wiki to apply {@code from}'s ApiClient settings on.
      */
     protected ApiClient(Wiki from, Wiki to) {
-        wiki = to;
-        client = from.apiclient.client;
-
-        JwikiCookieJar cl = (JwikiCookieJar) client.cookieJar();
+        this.wiki = to;
+        this.client = from.apiclient.client;
+        this.cookieJar = from.apiclient.cookieJar;
 
         Map<String, String> l = new HashMap<>();
-        cl.cj.get(from.conf.hostname).forEach((k, v) -> {
+        this.cookieJar.getCj().get(from.conf.hostname).forEach((k, v) -> {
             if (k.contains("centralauth"))
                 l.put(k, v);
         });
 
-        cl.cj.put(wiki.conf.hostname, l);
+        this.cookieJar.getCj().put(this.wiki.conf.hostname, l);
     }
 
     /**
@@ -88,10 +90,10 @@ class ApiClient {
      * @return A new Request.Builder with default values needed to hit MediaWiki API endpoints.
      */
     private Request.Builder startReq(Map<String, String> params) {
-        HttpUrl.Builder hb = wiki.conf.baseURL.newBuilder();
+        HttpUrl.Builder hb = this.wiki.conf.baseURL.newBuilder();
         params.forEach(hb::addQueryParameter);
 
-        return new Request.Builder().url(hb.build()).header("User-Agent", wiki.conf.userAgent);
+        return new Request.Builder().url(hb.build()).header("User-Agent", this.wiki.conf.userAgent);
     }
 
     /**
@@ -102,7 +104,7 @@ class ApiClient {
      * @throws IOException Network error
      */
     protected Response basicGET(Map<String, String> params) throws IOException {
-        return client.newCall(startReq(params).get().build()).execute();
+        return this.client.newCall(startReq(params).get().build()).execute();
     }
 
     /**
@@ -116,7 +118,7 @@ class ApiClient {
         TokenizedResponse response = new TokenizedResponse(this.basicGET(params));
 
         if (isBadToken(response)) {
-            wiki.refreshLoginStatus();
+            this.wiki.refreshLoginStatus();
             // Only attempt once after refreshing login
             return new TokenizedResponse(this.basicGET(params));
         }
@@ -136,7 +138,7 @@ class ApiClient {
         FormBody.Builder fb = new FormBody.Builder();
         form.forEach(fb::add);
 
-        return client.newCall(startReq(params).post(fb.build()).build()).execute();
+        return this.client.newCall(startReq(params).post(fb.build()).build()).execute();
     }
 
     /**
@@ -151,7 +153,7 @@ class ApiClient {
         TokenizedResponse response = new TokenizedResponse(this.basicPOST(params, form));
 
         if (isBadToken(response)) {
-            wiki.refreshLoginStatus();
+            this.wiki.refreshLoginStatus();
             // Only attempt once after refreshing login
             return new TokenizedResponse(this.basicPOST(params, form));
         }
@@ -177,7 +179,7 @@ class ApiClient {
         mpb.addFormDataPart("chunk", fn, RequestBody.create(chunk, octetstream));
 
         Request r = startReq(params).post(mpb.build()).build();
-        return client.newCall(r).execute();
+        return this.client.newCall(r).execute();
     }
 
     protected static boolean isBadToken(TokenizedResponse response) {
@@ -192,15 +194,16 @@ class ApiClient {
         return false;
     }
 
+    public JwikiCookieJar getCookieJar() {
+        return this.cookieJar;
+    }
+
     /**
      * Basic CookieJar policy for use with jwiki.
      *
      * @author Fastily
      */
-    private static class JwikiCookieJar implements CookieJar {
-        /**
-         * Internal Map tracking cookies. Legend - [ domain : [ key : value ] ].
-         */
+    public static class JwikiCookieJar implements CookieJar {
         private final Map<String, Map<String, String>> cj = new HashMap<>();
 
         /**
@@ -217,7 +220,7 @@ class ApiClient {
         public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
             String host = url.host();
 
-            Map<String, String> m = cj.computeIfAbsent(host, k -> new HashMap<>());
+            Map<String, String> m = this.cj.computeIfAbsent(host, k -> new HashMap<>());
             for (Cookie c : cookies)
                 m.put(c.name(), c.value());
         }
@@ -228,13 +231,20 @@ class ApiClient {
         @Override
         public List<Cookie> loadForRequest(HttpUrl url) {
             String host = url.host();
-            if (cj.containsKey(host)) {
-                return cj.get(host).entrySet().stream()
+            if (this.cj.containsKey(host)) {
+                return this.cj.get(host).entrySet().stream()
                         .map(e -> new Cookie.Builder().name(e.getKey()).value(e.getValue()).domain(host).build())
                         .collect(Collectors.toList());
             } else {
                 return new ArrayList<>();
             }
+        }
+
+        /**
+         * Internal Map tracking cookies. Legend - [ domain : [ key : value ] ].
+         */
+        public Map<String, Map<String, String>> getCj() {
+            return this.cj;
         }
     }
 }

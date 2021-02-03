@@ -437,6 +437,10 @@ public class Wiki {
         return conf;
     }
 
+    public ApiClient getApiClient() {
+        return this.apiclient;
+    }
+
     /**
      * Gets a String representation of this Wiki, in the format {@code [username @ domain]}
      */
