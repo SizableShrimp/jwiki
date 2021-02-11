@@ -1,6 +1,6 @@
 package org.fastily.jwiki.dwrap;
 
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -18,7 +18,7 @@ import java.io.IOException;
 public class TokenizedResponse {
     private final Response response;
     private final String body;
-    private final JsonObject jsonBody;
+    private final JsonElement jsonBody;
 
     /**
      * Wrap a {@link Response} into a {@link TokenizedResponse} which caches the response body and parses it into JSON.
@@ -30,7 +30,7 @@ public class TokenizedResponse {
         this.response = response;
         if (response.body() != null) {
             this.body = response.body().string();
-            this.jsonBody = JsonParser.parseString(this.body).getAsJsonObject();
+            this.jsonBody = JsonParser.parseString(this.body);
             response.close();
         } else {
             this.body = null;
@@ -58,11 +58,11 @@ public class TokenizedResponse {
     }
 
     /**
-     * Returns the parsed {@link JsonObject} from {@link #getBody()}.
+     * Returns the parsed {@link JsonElement} from {@link #getBody()}.
      *
-     * @return the parsed {@link JsonObject} from {@link #getBody()}.
+     * @return the parsed {@link JsonElement} from {@link #getBody()}.
      */
-    public JsonObject getJsonBody() {
+    public JsonElement getJsonBody() {
         return jsonBody;
     }
 }

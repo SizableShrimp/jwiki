@@ -103,7 +103,7 @@ public class WAction {
             TokenizedResponse response = isPOST
                     ? wiki.apiclient.basicTokenizedPOST(FL.pMap("action", action), fl)
                     : wiki.apiclient.basicTokenizedGET(fl);
-            JsonObject result = response.getJsonBody();
+            JsonObject result = response.getJsonBody().getAsJsonObject();
 
             if (isPOST) {
                 if (WikiLogger.isTraceEnabled())

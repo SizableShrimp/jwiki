@@ -117,8 +117,8 @@ public class ApiClient {
     protected TokenizedResponse basicTokenizedGET(Map<String, String> params) throws IOException {
         TokenizedResponse response = new TokenizedResponse(this.basicGET(params));
 
-        if (isBadToken(response)) {
-            this.wiki.refreshLoginStatus();
+        if (isBadToken(response) && this.wiki.username != null && this.wiki.password != null) {
+            this.wiki.internalLogin();
             // Only attempt once after refreshing login
             return new TokenizedResponse(this.basicGET(params));
         }
@@ -152,8 +152,8 @@ public class ApiClient {
     protected TokenizedResponse basicTokenizedPOST(Map<String, String> params, Map<String, String> form) throws IOException {
         TokenizedResponse response = new TokenizedResponse(this.basicPOST(params, form));
 
-        if (isBadToken(response)) {
-            this.wiki.refreshLoginStatus();
+        if (isBadToken(response) && this.wiki.username != null && this.wiki.password != null) {
+            this.wiki.internalLogin();
             // Only attempt once after refreshing login
             return new TokenizedResponse(this.basicPOST(params, form));
         }
@@ -183,7 +183,7 @@ public class ApiClient {
     }
 
     protected static boolean isBadToken(TokenizedResponse response) {
-        JsonObject json = response.getJsonBody();
+        JsonObject json = response.getJsonBody().getAsJsonObject();
 
         if (json.has("error")) {
             JsonObject error = json.getAsJsonObject("error");

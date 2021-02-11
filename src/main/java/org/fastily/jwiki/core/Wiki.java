@@ -174,6 +174,9 @@ public class Wiki {
      */
     protected ApiClient apiclient;
 
+    protected String username;
+    protected String password;
+
     /**
      * Constructor, creates a new Wiki
      */
@@ -209,8 +212,9 @@ public class Wiki {
      * @return True if the user is now logged in.
      */
     public synchronized boolean login(String user, String password) {
-        if (conf.uname != null) // do not login more than once
-            return true;
+        // Store latest username and password combo in case we need to login again
+        this.username = user;
+        this.password = password;
 
         WikiLogger.info(this, "Try login for {}", user);
         try {
@@ -227,6 +231,10 @@ public class Wiki {
         return false;
     }
 
+    synchronized boolean internalLogin() {
+        return login(this.username, this.password);
+    }
+
     /**
      * Refresh the login status of a Wiki. This runs automatically on login or creation of a new CentralAuth'd Wiki.
      */
@@ -235,7 +243,8 @@ public class Wiki {
         conf.token = getTokens(WQuery.TOKENS_CSRF, "csrftoken");
         wl.put(conf.hostname, this);
 
-        conf.isBot = listUserRights(conf.uname).contains("bot");
+        List<String> rights = listUserRights(conf.uname);
+        conf.isBot = rights != null && rights.contains("bot");
     }
 
     /**
