@@ -24,10 +24,8 @@ public class QReply extends AReply {
      * Default path to json for {@code prop} queries.
      */
     protected static final List<String> defaultPropPTJ = List.of("query", "pages");
-
     /**
-     * Tracks {@code normalized} titles. The key is the {@code from} (non-normalized) title and the value is the
-     * {@code to} (normalized) title.
+     * Tracks {@code normalized} titles. The key is the {@code from} (non-normalized) title and the value is the {@code to} (normalized) title.
      */
     private final Map<String, String> normalized;
 
@@ -35,17 +33,31 @@ public class QReply extends AReply {
         super("query", type, response);
 
         if (GSONP.nestedHas(response, FL.toSAL("query", "normalized"))) {
-            normalized = GSONP.pairOff(GSONP.getJAofJO(GSONP.getNestedJA(response, FL.toSAL("query", "normalized"))), "from", "to");
+            this.normalized = GSONP.pairOff(GSONP.getJAofJO(GSONP.getNestedJA(response, FL.toSAL("query", "normalized"))), "from", "to");
         } else {
-            normalized = Map.of();
+            this.normalized = Map.of();
         }
     }
 
     /**
-     * Wrap the {@code query} action and {@code response} into an {@link AReply} object.
+     * Wraps an {@link AReply} with an {@code query} action into a QReply instead.
+     * The returned value is equal to {@link QReply#NULL_REPLY} if {@code reply} is a null reply, null, or its action is not {@code query}.
+     *
+     * @param reply The original {@link AReply}
+     * @return a wrapped QReply made from an {@link AReply}
+     */
+    public static QReply wrap(AReply reply) {
+        if (reply == null || reply == AReply.NULL_REPLY || !reply.getAction().equals("query"))
+            return NULL_REPLY;
+
+        return new QReply(reply.getType(), reply.getResponse());
+    }
+
+    /**
+     * Wraps a {@code query} action and {@code response} into a QReply object.
      *
      * @param response The JSON GET response from the server.
-     * @return a wrapped {@link AReply} object.
+     * @return a wrapped QReply object.
      */
     public static QReply wrap(JsonObject response) {
         if (response == null || response.size() == 0)
@@ -113,5 +125,15 @@ public class QReply extends AReply {
             });
 
         return m;
+    }
+
+    /**
+     * Returns an immutable {@link Map} that tracks {@code normalized} titles returned from the API response.
+     * The key is the {@code from} (non-normalized) title and the value is the {@code to} (normalized) title.
+     *
+     * @return an immutable {@link Map} that tracks {@code normalized} titles returned from the API response.
+     */
+    public Map<String, String> getNormalizedMap() {
+        return this.normalized;
     }
 }

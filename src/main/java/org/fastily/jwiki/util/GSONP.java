@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -92,15 +91,15 @@ public class GSONP {
     }
 
     /**
-     * Extract a pair of String values from each JsonObject in an List of JsonObject
+     * Extract a pair of string values from each {@link JsonObject} in a {@link List} of {@link JsonObject}s into an immutable {@link Map}.
      *
-     * @param input The source List
-     * @param kk Points to each key in to be used in the resulting Map.
-     * @param vk Points to each value in to be used in the resulting Map.
-     * @return The pairs of String values.
+     * @param input The source {@link List}
+     * @param kk Points to each key in to be used in the resulting {@link Map}.
+     * @param vk Points to each value in to be used in the resulting {@link Map}.
+     * @return The pairs of String values in an immutable {@link Map}.
      */
     public static Map<String, String> pairOff(List<JsonObject> input, String kk, String vk) {
-        return new HashMap<>(input.stream().collect(Collectors.toMap(e -> getStr(e, kk), e -> getStr(e, vk))));
+        return input.stream().collect(Collectors.toUnmodifiableMap(e -> getStr(e, kk), e -> getStr(e, vk)));
     }
 
     /**

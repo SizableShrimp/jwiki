@@ -462,7 +462,7 @@ public class Wiki {
     /* //////////////////////////////////////////////////////////////////////////////// */
 
     /**
-     * Appends text to a page. If {@code title} does not exist, then create the page normally with {@code text}
+     * Appends text to a page. If {@code title} does not exist, then creates the page normally with {@code text}.
      *
      * @param title The title to edit.
      * @param add The text to append
@@ -475,7 +475,7 @@ public class Wiki {
     }
 
     /**
-     * Edit a page, and check if the request actually went through.
+     * Edits a page.
      *
      * @param title The title to use
      * @param text The text to use
@@ -498,7 +498,7 @@ public class Wiki {
     }
 
     /**
-     * Move a page.
+     * Moves a page.
      *
      * @param title The original title to move
      * @param newTitle The new title to move the old page to
@@ -511,6 +511,16 @@ public class Wiki {
      */
     public AReply move(String title, String newTitle, boolean moveTalk, boolean moveSubpages, boolean supressRedirect, String reason) {
         return WAction.move(this, title, newTitle, moveTalk, moveSubpages, supressRedirect, reason);
+    }
+
+    /**
+     * Normalizes a page title.
+     *
+     * @param title The page title to normalize
+     * @return The normalized page title
+     */
+    public String normalizeTitle(String title) {
+        return WAction.normalizeTitle(this, title);
     }
 
     /**
@@ -552,7 +562,7 @@ public class Wiki {
     }
 
     /**
-     * Undelete a page. You must have admin rights on the wiki you are trying to perform this task on, otherwise it won't go through.
+     * Undeletes a page. You must have the proper rights.
      *
      * @param title The title to undelete
      * @param reason The reason to use
@@ -563,7 +573,7 @@ public class Wiki {
     }
 
     /**
-     * Upload a media file.
+     * Uploads a media file.
      *
      * @param p The file to use
      * @param title The title to upload to. Must include "File:" prefix.
@@ -576,7 +586,7 @@ public class Wiki {
     }
 
     /**
-     * Upload a file by URL. The URL must be on the upload by url whitelist for the target Wiki or this method will automatically fail.
+     * Uploads a file by URL. The URL must be on the upload by URL whitelist for the target Wiki or this method will automatically fail.
      *
      * @param url The URL the target file is located at.
      * @param title The title to upload to.
@@ -593,7 +603,7 @@ public class Wiki {
     /* //////////////////////////////////////////////////////////////////////////////// */
 
     /**
-     * Get a list of pages from the Wiki.
+     * Retrieves a list of pages from the Wiki.
      *
      * @param prefix Only return titles starting with this prefix. DO NOT include a namespace prefix (e.g. {@code File:}). Optional param - set null to disable
      * @param redirectsOnly Set true to get redirects only.
@@ -635,7 +645,7 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of pages linking to a file.
+     * Retrieves a list of pages linking to a file.
      *
      * @param title The title to query. PRECONDITION: This must be a valid file name prefixed with the "File:" prefix, or you will get strange results.
      * @return A list of pages linking to the file.
@@ -646,7 +656,7 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of file extensions for the types of files which can be uploaded to this Wiki. WARNING: this method is not cached so save the result.
+     * Retrieves a list of file extensions for the types of files which can be uploaded to this Wiki. WARNING: this method is not cached so save the result.
      *
      * @return A list of file extensions for files which can be uploaded to this Wiki.
      */
@@ -656,7 +666,7 @@ public class Wiki {
     }
 
     /**
-     * Get the categories of a page.
+     * Retrieves the categories of a page.
      *
      * @param title The title to get categories of.
      * @return A list of categories, or the empty list if something went wrong.
@@ -667,7 +677,7 @@ public class Wiki {
     }
 
     /**
-     * Get a limited number of titles in a category.
+     * Retrieves a limited number of titles in a category.
      *
      * @param title The category to query, including the "Category:" prefix.
      * @param ns Namespace filter. Any title not in the specified namespace(s) will be ignored. Leave blank to select all namespaces. CAVEAT: skipped items are counted against {@code cap}.
@@ -689,7 +699,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the number of elements contained in a category.
+     * Retrieves the number of elements contained in a category.
      *
      * @param title The title to query. PRECONDITION: Title *must* begin with the "Category:" prefix
      * @return The number of elements in the category. Value returned will be -1 if Category entered was empty <b>and</b> non-existent.
@@ -700,7 +710,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the contributions of a user.
+     * Retrieves the contributions of a user.
      *
      * @param user The user to get contribs for, without the "User:" prefix.
      * @param cap The maximum number of results to return. Optional, disable with -1 (<b>caveat</b>: this will get *all* of a user's contributions)
@@ -729,7 +739,7 @@ public class Wiki {
     }
 
     /**
-     * List duplicates of a file.
+     * Lists duplicates of a file.
      *
      * @param title The title to query. PRECONDITION: You MUST include the namespace prefix (e.g. "File:")
      * @param localOnly Set to true to restrict results to <span style="font-weight:bold;">local</span> duplicates only.
@@ -741,7 +751,7 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of external URLs on a page.
+     * Retrieves a list of external URLs on a page.
      *
      * @param title The title to query
      * @return A List of external links found on the page.
@@ -752,7 +762,7 @@ public class Wiki {
     }
 
     /**
-     * Gets information about a File's revisions. Does not fill the thumbnail param of ImageInfo.
+     * Retrieves information about a File's revisions. Does not fill the thumbnail param of ImageInfo.
      *
      * @param title The title of the file to use (must be in the file namespace and exist, else return null)
      * @return A list of ImageInfo objects, one for each revision. The order is newer -&gt; older.
@@ -763,7 +773,7 @@ public class Wiki {
     }
 
     /**
-     * Gets titles of images linked on a page.
+     * Retrieves titles of images linked on a page.
      *
      * @param title The title to query
      * @return The images found on <code>title</code>
@@ -774,7 +784,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the username of the editor who last edited a page.
+     * Retrieves the username of the editor who last edited a page.
      *
      * @param title The title to query
      * @return The most recent editor of {@code title} (excluding {@code User:} prefix) or null on error.
@@ -789,7 +799,7 @@ public class Wiki {
     }
 
     /**
-     * Gets wiki links on a page.
+     * Retrieves wiki links on a page.
      *
      * @param title The title to query
      * @param ns Namespaces to include-only. Optional, leave blank to select all namespaces.
@@ -801,7 +811,7 @@ public class Wiki {
     }
 
     /**
-     * Gets all existing or non-existing wiki links on a page.
+     * Retrieves all existing or non-existing wiki links on a page.
      *
      * @param exists Fetch mode. Set true to get existing pages and false to get missing/non-existent pages.
      * @param title The title to query
@@ -813,7 +823,7 @@ public class Wiki {
     }
 
     /**
-     * List log events. Order is newer -&gt; older.
+     * Lists log events. Order is newer -&gt; older.
      *
      * @param title The title to fetch logs for. Optional - set null to disable.
      * @param user The performing user to filter log entries by. Optional - set null to disable
@@ -841,7 +851,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the first editor (creator) of a page. Specifically, get the author of the first revision of {@code title}.
+     * Retrieves the first editor (creator) of a page. Specifically, get the author of the first revision of {@code title}.
      *
      * @param title The title to query
      * @return The page creator (excluding {@code User:} prefix) or null on error.
@@ -856,7 +866,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the text of a page.
+     * Retrieves the text of a page.
      *
      * @param title The title to query
      * @return The text of the page, or an empty string if the page is non-existent/something went wrong.
@@ -892,7 +902,7 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of random pages.
+     * Retrieves a list of random pages.
      *
      * @param limit The number of titles to retrieve. PRECONDITION: {@code limit} cannot be a negative number.
      * @param ns Returned titles will be in these namespaces. Optional param - leave blank to disable.
@@ -918,7 +928,8 @@ public class Wiki {
     }
 
     /**
-     * Gets a specified number of Recent Changes in between two timestamps. WARNING: if you use both {@code start} and {@code end}, then {@code start} MUST be earlier than {@code end}. If you set both
+     * Retrieves a specified number of Recent Changes in between two timestamps. WARNING: if you use both {@code start} and {@code end}, then {@code start} MUST be earlier than {@code end}. If you
+     * set both
      * {@code start} and {@code end} to null, then the default behavior is to fetch the last 30 seconds of recent changes.
      *
      * @param start The Instant to start enumerating from. Can be used without {@code end}. Optional param - set null to disable.
@@ -949,7 +960,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the revisions of a page.
+     * Retrieves the revisions of a page.
      *
      * @param title The title to query
      * @param cap The maximum number of results to return. Optional param: set to any number zero or less to disable.
@@ -980,7 +991,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the shared (non-local) duplicates of a file. PRECONDITION: The Wiki this query is run against has the <a href="https://www.mediawiki.org/wiki/Extension:GlobalUsage">GlobalUsage</a>
+     * Retrieves the shared (non-local) duplicates of a file. PRECONDITION: The Wiki this query is run against has the <a href="https://www.mediawiki.org/wiki/Extension:GlobalUsage">GlobalUsage</a>
      * extension installed.
      *
      * @param title The title of the file to query
@@ -992,7 +1003,7 @@ public class Wiki {
     }
 
     /**
-     * Gets templates transcluded on a page.
+     * Retrieves templates transcluded on a page.
      *
      * @param title The title to query.
      * @return The templates transcluded on <code>title</code>
@@ -1003,7 +1014,7 @@ public class Wiki {
     }
 
     /**
-     * Gets a text extract (the lead paragraph) of a page.
+     * Retrieves a text extract (the lead paragraph) of a page.
      *
      * @param title The title to get a text extract for.
      * @return The text extract. Null if {@code title} does not exist or is a special page.
@@ -1014,7 +1025,7 @@ public class Wiki {
     }
 
     /**
-     * Get a user's uploads.
+     * Retrieves a user's uploads.
      *
      * @param user The username, without the "User:" prefix. PRECONDITION: <code>user</code> must be a valid username.
      * @return This user's uploads
@@ -1032,7 +1043,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the global usage of a file. PRECONDITION: GlobalUsage must be installed on the target Wiki.
+     * Retrieves the global usage of a file. PRECONDITION: GlobalUsage must be installed on the target Wiki.
      *
      * @param title The title to query. Must start with <code>File:</code> prefix.
      * @return A List with the global usage of this file; each element is of the form <code>[ title : wiki ]</code>.
@@ -1043,7 +1054,7 @@ public class Wiki {
     }
 
     /**
-     * Gets the list of usergroups (rights) a user belongs to. Sample groups: sysop, user, autoconfirmed, editor.
+     * Retrieves the list of usergroups (rights) a user belongs to. Sample groups: sysop, user, autoconfirmed, editor.
      *
      * @param user The user to get rights information for. Do not include "User:" prefix.
      * @return The usergroups {@code user} belongs to, or null if {@code user} is an IP or non-existent user.
@@ -1165,7 +1176,7 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of links or redirects to a page.
+     * Retrieves a list of links or redirects to a page.
      *
      * @param title The title to query
      * @param redirects Set to true to get redirects only. Set to false to filter out all redirects.
@@ -1177,8 +1188,9 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of direct links to a page. CAVEAT: This does not get any pages linking to a redirect pointing to this page; in order to do this you will first need to obtain a list of redirects to
-     * the target, and then call <code>whatLinksHere()</code> on each of those redirects.
+     * Retrieves a list of direct links to a page. CAVEAT: This does not get any pages linking to a redirect pointing to this page; in order to do this you will first need to obtain a list of
+     * redirects to
+     * the target, and then call {@code whatLinksHere()} on each of those redirects.
      *
      * @param title The title to query
      * @return A list of links to this page.
@@ -1188,11 +1200,11 @@ public class Wiki {
     }
 
     /**
-     * Gets a list of pages transcluding a template.
+     * Retrieves a list of pages transcluding a template.
      *
      * @param title The title to query. You *must* include the namespace prefix (e.g. "Template:") or you will get strange results.
      * @param ns Only return results from this/these namespace(s). Optional param: leave blank to disable.
-     * @return The pages transcluding <code>title</code>.
+     * @return The pages transcluding {@code title}.
      */
     public List<String> whatTranscludesHere(String title, NS... ns) {
         WikiLogger.info(this, "Getting list of pages that transclude {}", title);

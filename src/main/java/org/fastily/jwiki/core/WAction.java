@@ -9,7 +9,6 @@ import okio.Okio;
 import org.fastily.jwiki.dwrap.TokenizedResponse;
 import org.fastily.jwiki.util.FL;
 import org.fastily.jwiki.util.GSONP;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -164,7 +163,6 @@ public class WAction {
      * @param summary The edit summary to use
      * @return An {@link AReply} object holding the response data and whether it was a success.
      */
-    @NotNull
     protected static AReply edit(Wiki wiki, String title, String text, String summary) {
         WikiLogger.info(wiki, "Editing {}", title);
 
@@ -195,7 +193,7 @@ public class WAction {
     /**
      * Moves a page.
      *
-     * @param wiki The Wiki objec to use
+     * @param wiki The Wiki object to use
      * @param title The original title to move
      * @param newTitle The new title to move the old page to
      * @param moveTalk Flag indicating if {@code title}'s talk page (assuming it exists) should be moved. Optional, set false to disable.
@@ -221,6 +219,19 @@ public class WAction {
     }
 
     /**
+     * Normalizes a page title.
+     *
+     * @param title The page title to normalize
+     * @return The normalized page title
+     */
+    protected static String normalizeTitle(Wiki wiki, String title) {
+        WikiLogger.info(wiki, "Normalizing {}", title);
+
+        Map<String, String> normalized = QReply.wrap(getAction(wiki, "query", true, FL.pMap("titles"))).getNormalizedMap();
+        return normalized.getOrDefault(title, title); // If the normalized map does not contain the title, then it is already normalized
+    }
+
+    /**
      * Deletes a page. Wiki must be logged in and have administrator permissions for this to succeed.
      *
      * @param wiki The Wiki to work on.
@@ -235,7 +246,7 @@ public class WAction {
     }
 
     /**
-     * Undelete a page. Wiki must be logged in and have administrator permissions for this to succeed.
+     * Undeletes a page. Wiki must be logged in and have administrator permissions for this to succeed.
      *
      * @param wiki The Wiki to work on.
      * @param title The title to delete
@@ -271,7 +282,6 @@ public class WAction {
      * @param file The Path to the file to upload.
      * @return An {@link AReply} object holding the response data and whether it was a success.
      */
-    @NotNull
     protected static AReply upload(Wiki wiki, String title, String desc, String summary, Path file) {
         WikiLogger.info(wiki, "Uploading {}", file);
 
@@ -324,7 +334,7 @@ public class WAction {
     }
 
     /**
-     * Upload a file by URL. The URL must be on the upload by url whitelist for the target Wiki or this method will automatically fail.
+     * Uploads a file by URL. The URL must be on the upload by URL whitelist for the target Wiki or this method will automatically fail.
      *
      * @param wiki The Wiki object to use
      * @param url The URL the target file is located at.

@@ -1,7 +1,5 @@
 package org.fastily.jwiki.util;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +17,7 @@ public class MultiMap<K, V> extends HashMap<K, List<V>> {
     /**
      * Constructor, creates an empty MultiMap.
      */
-    public MultiMap() {
-        super();
-    }
+    public MultiMap() {}
 
     /**
      * Adds a key-value pair to this MultiMap.
@@ -55,7 +51,6 @@ public class MultiMap<K, V> extends HashMap<K, List<V>> {
      * @param k The key
      * @return the {@link List} in this MultiMap; empty if newly created.
      */
-    @NotNull
     public List<V> touch(K k) {
         return super.computeIfAbsent(k, x -> new ArrayList<>());
     }
