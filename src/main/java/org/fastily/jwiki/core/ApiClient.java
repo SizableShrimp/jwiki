@@ -242,6 +242,7 @@ public class ApiClient {
 
         /**
          * Internal Map tracking cookies. Legend - [ domain : [ key : value ] ].
+         * @return the internal Map tracking cookies.
          */
         public Map<String, Map<String, String>> getCj() {
             return this.cj;

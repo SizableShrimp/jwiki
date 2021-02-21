@@ -2,6 +2,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'java-library'
+    id 'maven'
     id 'maven-publish'
     id 'signing'
 }
@@ -111,6 +112,6 @@ publishing {
 }
 
 
-signing {
-    sign publishing.publications.mavenJava
-}
+//signing {
+//    sign publishing.publications.mavenJava
+//}

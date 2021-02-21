@@ -1102,7 +1102,7 @@ public class Wiki {
      * Queries a special page.
      *
      * @param title The special page to query, without the {@code Special:} prefix. CAVEAT: this is CASE-sensitive, so be sure to use the exact title (e.g. {@code UnusedFiles},
-     * {@code BrokenRedirects}). For a full list of titles, see <a href="https://www.mediawiki.org/w/api.php?action=help&modules=query+querypage">the official documentation</a>.
+     * {@code BrokenRedirects}). For a full list of titles, see <a href="https://www.mediawiki.org/w/api.php?action=help&amp;modules=query+querypage">the official documentation</a>.
      * @param cap The maximum number of elements to return. Use {@code -1} to get everything, but be careful because some pages can have 10k+ entries.
      * @return A List of titles returned by this special page.
      */
