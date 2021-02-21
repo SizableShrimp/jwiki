@@ -227,7 +227,7 @@ public class WAction {
     protected static String normalizeTitle(Wiki wiki, String title) {
         WikiLogger.info(wiki, "Normalizing {}", title);
 
-        Map<String, String> normalized = QReply.wrap(getAction(wiki, "query", true, FL.pMap("titles"))).getNormalizedMap();
+        Map<String, String> normalized = QReply.wrap(getAction(wiki, "query", true, Map.of("titles", title))).getNormalizedMap();
         return normalized.getOrDefault(title, title); // If the normalized map does not contain the title, then it is already normalized
     }
 
