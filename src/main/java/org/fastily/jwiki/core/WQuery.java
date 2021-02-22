@@ -294,7 +294,7 @@ public class WQuery {
                 canCont = false;
             }
 
-            JsonObject result = wiki.apiclient.basicTokenizedGET(pl).getJsonBody().getAsJsonObject();
+            JsonObject result = wiki.apiclient.basicTokenizedGET(pl, "token").getJsonBody().getAsJsonObject();
             if (result.has("continue"))
                 pl.putAll(GSONP.gson.fromJson(result.getAsJsonObject("continue"), STRING_MAP_TYPE));
             else

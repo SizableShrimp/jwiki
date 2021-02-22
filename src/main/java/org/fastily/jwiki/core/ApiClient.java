@@ -111,16 +111,23 @@ public class ApiClient {
      * Basic {@code GET} to the MediaWiki API with a retry if the login token has expired.
      *
      * @param params Any URL parameters (not URL-encoded).
+     * @param tokenKey The key to put in the {@code param} data that maps to the token. If null, no token is inserted.
      * @return A {@link TokenizedResponse} object with the result of this Request.
      * @throws IOException Network error
      */
-    protected TokenizedResponse basicTokenizedGET(Map<String, String> params) throws IOException {
-        TokenizedResponse response = new TokenizedResponse(this.basicGET(params));
+    protected TokenizedResponse basicTokenizedGET(Map<String, String> params, String tokenKey) throws IOException {
+        Map<String, String> copiedParams = params instanceof HashMap ? params : new HashMap<>(params);
+        if (tokenKey != null)
+            copiedParams.put(tokenKey, wiki.conf.token);
+
+        TokenizedResponse response = new TokenizedResponse(this.basicGET(copiedParams));
 
         if (isBadToken(response) && this.wiki.username != null && this.wiki.password != null) {
             this.wiki.internalLogin();
+            if (tokenKey != null)
+                copiedParams.put(tokenKey, wiki.conf.token);
             // Only attempt once after refreshing login
-            return new TokenizedResponse(this.basicGET(params));
+            return new TokenizedResponse(this.basicGET(copiedParams));
         }
 
         return response;
@@ -146,16 +153,23 @@ public class ApiClient {
      *
      * @param params Any URL parameters (not URL-encoded).
      * @param form The Key-Value form parameters to {@code POST}.
+     * @param tokenKey The key to put in the form data that maps to the token. If null, no token is inserted.
      * @return A {@link TokenizedResponse} object with the result of this Request.
      * @throws IOException Network error
      */
-    protected TokenizedResponse basicTokenizedPOST(Map<String, String> params, Map<String, String> form) throws IOException {
-        TokenizedResponse response = new TokenizedResponse(this.basicPOST(params, form));
+    protected TokenizedResponse basicTokenizedPOST(Map<String, String> params, Map<String, String> form, String tokenKey) throws IOException {
+        Map<String, String> copiedForm = form instanceof HashMap ? form : new HashMap<>(form);
+        if (tokenKey != null)
+            copiedForm.put(tokenKey, wiki.conf.token);
+
+        TokenizedResponse response = new TokenizedResponse(this.basicPOST(params, copiedForm));
 
         if (isBadToken(response) && this.wiki.username != null && this.wiki.password != null) {
             this.wiki.internalLogin();
+            if (tokenKey != null)
+                copiedForm.put(tokenKey, wiki.conf.token);
             // Only attempt once after refreshing login
-            return new TokenizedResponse(this.basicPOST(params, form));
+            return new TokenizedResponse(this.basicPOST(params, copiedForm));
         }
 
         return response;

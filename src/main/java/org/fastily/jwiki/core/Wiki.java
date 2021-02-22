@@ -282,7 +282,7 @@ public class Wiki {
         pl.put("format", "json");
 
         try {
-            return this.apiclient.basicTokenizedGET(pl);
+            return this.apiclient.basicTokenizedGET(pl, "token");
         } catch (IOException e) {
             WikiLogger.error(this, "Error while performing basic GET", e);
             return null;
@@ -301,7 +301,7 @@ public class Wiki {
         form.put("format", "json");
 
         try {
-            return this.apiclient.basicTokenizedPOST(FL.pMap("action", action), form);
+            return this.apiclient.basicTokenizedPOST(FL.pMap("action", action), form, "token");
         } catch (IOException e) {
             WikiLogger.error(this, "Error during basic POST", e);
             return null;

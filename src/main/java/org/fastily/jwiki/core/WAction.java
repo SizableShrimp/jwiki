@@ -62,7 +62,7 @@ public class WAction {
 
         fl.putAll(form);
 
-        return doAction(wiki, action, fl, true, 1);
+        return doAction(wiki, action, applyToken, fl, true, 1);
     }
 
     /**
@@ -83,25 +83,23 @@ public class WAction {
      *
      * @param wiki The Wiki to work on.
      * @param action The type of action to perform. This is the literal API action
-     * @param applyToken Set true to apply {@code wiki}'s edit token
+     * @param applyToken Set true to insert the currently cached CRSF token into the {@code param} data
      * @param params The parameter data to use. This should not be URL-encoded
      * @return An {@link AReply} object holding the response data and whether it was a success.
      */
     public static AReply getAction(Wiki wiki, String action, boolean applyToken, Map<String, String> params) {
         Map<String, String> fl = FL.pMap("format", "json", "action", action);
-        if (applyToken)
-            fl.put("token", wiki.conf.token);
 
         fl.putAll(params);
 
-        return doAction(wiki, action, fl, false, 1);
+        return doAction(wiki, action, applyToken, fl, false, 1);
     }
 
-    private static AReply doAction(Wiki wiki, String action, Map<String, String> fl, boolean isPOST, int upperLimit) {
+    private static AReply doAction(Wiki wiki, String action, boolean applyToken, Map<String, String> fl, boolean isPOST, int upperLimit) {
         try {
             TokenizedResponse response = isPOST
-                    ? wiki.apiclient.basicTokenizedPOST(FL.pMap("action", action), fl)
-                    : wiki.apiclient.basicTokenizedGET(fl);
+                    ? wiki.apiclient.basicTokenizedPOST(FL.pMap("action", action), fl, applyToken ? "token" : null)
+                    : wiki.apiclient.basicTokenizedGET(fl, applyToken ? "token" : null);
             JsonObject result = response.getJsonBody().getAsJsonObject();
 
             if (isPOST) {
@@ -120,7 +118,7 @@ public class WAction {
                 int wait = ThreadLocalRandom.current().nextInt(upperLimit); // exclusive bounds means this is a proper truncated binary exponential backoff impl
                 WikiLogger.warn(wiki, "Ratelimited by server when performing {} '{}', sleeping {} seconds.", isPOST ? "POST" : "GET", action, wait);
                 Thread.sleep(wait * 1000L);
-                return doAction(wiki, action, fl, isPOST, upperLimit);
+                return doAction(wiki, action, applyToken, fl, isPOST, upperLimit);
             } else {
                 return reply;
             }
