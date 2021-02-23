@@ -1,5 +1,7 @@
 package org.fastily.jwiki.dwrap;
 
+import java.util.Objects;
+
 /**
  * Represents a contribution made by a user.
  *
@@ -21,5 +23,22 @@ public class Contrib extends DataEntry {
      */
     protected Contrib() {
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        if (!super.equals(o))
+            return false;
+        Contrib contrib = (Contrib) o;
+        return this.revid == contrib.revid && this.parentid == contrib.parentid;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), this.revid, this.parentid);
     }
 }

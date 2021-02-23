@@ -1,5 +1,7 @@
 package org.fastily.jwiki.dwrap;
 
+import java.util.Objects;
+
 /**
  * Represents a MediaWiki Log entry
  *
@@ -21,5 +23,22 @@ public class LogEntry extends DataEntry {
      */
     protected LogEntry() {
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        if (!super.equals(o))
+            return false;
+        LogEntry logEntry = (LogEntry) o;
+        return Objects.equals(this.type, logEntry.type) && Objects.equals(this.action, logEntry.action);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), this.type, this.action);
     }
 }

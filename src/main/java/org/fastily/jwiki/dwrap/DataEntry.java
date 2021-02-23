@@ -3,6 +3,7 @@ package org.fastily.jwiki.dwrap;
 import com.google.gson.annotations.SerializedName;
 
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Structured data template class.
@@ -43,5 +44,20 @@ public abstract class DataEntry {
      */
     public String toString() {
         return String.format("[ user : %s, title : %s, summary : %s, timestamp : %s ]", user, title, summary, timestamp);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        DataEntry dataEntry = (DataEntry) o;
+        return Objects.equals(this.user, dataEntry.user) && Objects.equals(this.title, dataEntry.title) && Objects.equals(this.summary, dataEntry.summary) && Objects.equals(this.timestamp, dataEntry.timestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.user, this.title, this.summary, this.timestamp);
     }
 }

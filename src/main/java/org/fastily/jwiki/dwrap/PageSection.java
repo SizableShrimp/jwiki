@@ -5,6 +5,7 @@ import org.fastily.jwiki.util.GSONP;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a paragraph in a page of wiki text.
@@ -98,5 +99,20 @@ public class PageSection {
      */
     private static int offsetOf(JsonObject jo) {
         return jo.get("byteoffset").getAsInt();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        PageSection that = (PageSection) o;
+        return this.level == that.level && Objects.equals(this.header, that.header) && Objects.equals(this.text, that.text);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.header, this.level, this.text);
     }
 }
