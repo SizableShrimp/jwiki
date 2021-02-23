@@ -307,7 +307,7 @@ class QueryTests {
     @Test
     void testGetRevisions() {
         // Test 1
-        List<Revision> result = wiki.getRevisions("User:FastilyClone/Page/1", -1, false, null, null);
+        List<Revision> result = wiki.getRevisions("User:FastilyClone/Page/1", -1, false, null, null, null, null);
 
         assertEquals(3, result.size());
         assertEquals(244465, result.get(0).revid);
@@ -316,7 +316,7 @@ class QueryTests {
         assertEquals(Instant.parse("2015-10-23T05:58:54Z"), result.get(0).timestamp);
 
         // Test 2
-        result = wiki.getRevisions("User:FastilyClone/Page/1", 2, true, null, null);
+        result = wiki.getRevisions("User:FastilyClone/Page/1", 2, true, null, null, null, null);
 
         assertEquals(2, result.size());
         assertEquals("s1", result.get(1).summary);

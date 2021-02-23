@@ -791,7 +791,7 @@ public class Wiki {
      */
     public String getLastEditor(String title) {
         try {
-            return getRevisions(title, 1, false, null, null).get(0).user;
+            return getRevisions(title, 1, false, null, null, null, null).get(0).user;
         } catch (Exception e) {
             WikiLogger.error(this, "Error when retrieving last editor", e);
             return null;
@@ -858,7 +858,7 @@ public class Wiki {
      */
     public String getPageCreator(String title) {
         try {
-            return getRevisions(title, 1, true, null, null).get(0).user;
+            return getRevisions(title, 1, true, null, null, null, null).get(0).user;
         } catch (Exception e) {
             WikiLogger.error(this, "Error when retrieving page creator", e);
             return null;
@@ -967,9 +967,11 @@ public class Wiki {
      * @param olderFirst Set to true to enumerate from older → newer revisions
      * @param start The instant to start enumerating from. Start date must occur before end date. Optional param - set null to disable.
      * @param end The instant to stop enumerating at. Optional param - set null to disable.
+     * @param user The user to exclusively filter revisions by. Optional param - set null to disable.
+     * @param excludeUser The user to exclude revisions by. Optional param - set null to disable.
      * @return A list of page revisions
      */
-    public List<Revision> getRevisions(String title, int cap, boolean olderFirst, Instant start, Instant end) {
+    public List<Revision> getRevisions(String title, int cap, boolean olderFirst, Instant start, Instant end, String user, String excludeUser) {
         WikiLogger.info(this, "Getting revisions from {}", title);
 
         WQuery wq = new WQuery(this, cap, WQuery.REVISIONS).set("titles", title);
@@ -980,6 +982,12 @@ public class Wiki {
             wq.set("rvstart", end.toString()); // MediaWiki has start <-> end reversed
             wq.set("rvend", start.toString());
         }
+
+        if (user != null)
+            wq.set("rvuser", user);
+
+        if (excludeUser != null)
+            wq.set("rvexcludeuser", excludeUser);
 
         List<Revision> l = new ArrayList<>();
         while (wq.has()) {
